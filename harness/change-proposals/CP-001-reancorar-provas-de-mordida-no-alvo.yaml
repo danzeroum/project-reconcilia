@@ -112,10 +112,30 @@ proposal:
         test_bootstrap_bites.py     3      test_lgpd_bites.py          3
         test_seguranca_bites.py     3      test_sincronizacao_bites.py 3
 
-      test_sincronizacao_bites.py falha por causa distinta das demais e merece diagnóstico
-      próprio antes de correção: `git clone` do alvo sintético sai 128 dentro do teste, o que é
-      falha de montagem do fixture, não de fiscal. Pode ser ambiente; pode ser o mesmo problema
-      de substrato numa forma diferente. Não presuma que a correção dos outros nove a resolve.
+      DIAGNÓSTICO DO exit 128, agora fechado. Era o único item desta proposta sem causa
+      identificada, e a causa apareceu depois do CP-002 e da ingestão:
+
+        subprocess.run(["git", "clone", str(alvo), str(root / "workspace/target")])
+
+      falha porque o fixture repo_copy copia a árvore INTEIRA, e workspace/target agora existe e
+      está cheio — o alvo materializado. `git clone` para diretório não vazio sai 128. O teste
+      pressupunha um repositório onde o workspace ainda não tinha sido materializado, que era o
+      estado normal antes e deixou de ser. Correção: remover o destino antes do clone.
+
+      Só que corrigir isso NÃO deixa esses três verdes, e é por isso que não corrigi sozinho: a
+      linha seguinte do mesmo fixture monta um componente com `capability: CAP-PRICING`, do
+      negócio de exemplo que o CP-000 removeu. É o mesmo problema de substrato dos outros nove,
+      escondido atrás de um erro de ambiente. Meia correção aqui produz churn sem verde e, pior,
+      dá a impressão de que o teste foi consertado.
+
+      SETE dos onze arquivos de tests/governance citam CAP-PRICING, CAP-CATALOG, CMP-PRICING ou
+      src/project — dez ocorrências. É a medida exata do acoplamento entre a suíte de mordida e
+      o negócio de exemplo do molde.
+
+      PROGRESSO MEDIDO, para esta proposta não ser reaberta às cegas: 47 → 44 → 38 falhas
+      (adoção → CP-002 → ingestão). A ingestão fechou nove sozinha, ao dar ao repositório
+      metadado real onde os testes esperavam encontrar algum. As 38 que restam são as que
+      dependem dos IDs do exemplo ou de escrever em src/project/.
 
       PIOR DO QUE QUEBRADOS: NÃO EXECUTAM. Medido no runner depois do CP-002, com o alvo já
       materializado — e é o achado que mais muda esta proposta. No job full-validation, o passo
