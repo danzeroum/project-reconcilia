@@ -117,6 +117,29 @@ proposal:
       falha de montagem do fixture, não de fiscal. Pode ser ambiente; pode ser o mesmo problema
       de substrato numa forma diferente. Não presuma que a correção dos outros nove a resolve.
 
+      PIOR DO QUE QUEBRADOS: NÃO EXECUTAM. Medido no runner depois do CP-002, com o alvo já
+      materializado — e é o achado que mais muda esta proposta. No job full-validation, o passo
+      "Validação total do projeto" é o de número 6, e os 26 passos negativos são do 7 ao 32.
+      Como o job para no primeiro passo que reprova, TODOS OS 26 SAEM 'skipped'. Não falharam:
+      não rodaram.
+
+      A consequência é desconfortável e precisa estar escrita: enquanto a linha de base deste
+      repositório estiver vermelha — isto é, até a ingestão fechar —, a bateria inteira de
+      provas de mordida do governance.yml é inalcançável. O CI não está verificando que os
+      fiscais mordem; está verificando que a validação reprova, e parando aí. Um fiscal
+      afrouxado por acidente nesse intervalo não seria pego por passo negativo algum.
+
+      Isso reordena o trabalho desta proposta. Não adianta reancorar as mutações se elas
+      continuam atrás de um gate que não abre: ou os passos negativos ganham
+      `if: always()` (ou um job separado, que é mais limpo — eles não dependem do veredito da
+      linha de base, só do ambiente), ou a linha de base precisa estar verde antes de eles
+      valerem alguma coisa. A segunda opção amarra a prova de mordida ao progresso da ingestão,
+      que é acoplamento que ninguém pediu. A primeira é preferível e deve vir ANTES da
+      reancoragem: um passo negativo que não roda é indistinguível de um que passa.
+
+      Herança do molde outra vez, pelo mesmo mecanismo de sempre: lá a linha de base está
+      sempre verde, então o passo 6 nunca reprova e a ordem dos passos nunca importou.
+
       E VALE PARA O MOLDE TAMBÉM. O molde não tem defeito enquanto for molde, mas todo derivado
       futuro herdará o mesmo problema no mesmo instante — esta adoção é a primeira medição dele.
       A correção estrutural pertence lá; esta proposta é o registro de onde ela dói primeiro.
