@@ -83,7 +83,9 @@ proposal:
       com o alvo já materializado: `pytest tests/governance` sai 47 failed / 94 passed aqui, e
       18/18 passed no molde para o mesmo arquivo test_inventario_bites.py. Não é regressão da
       adoção — é a mesma herança, na suíte que roda em DOIS workflows (o passo "Testes dos
-      fiscais" de governance.yml e o de qa.yml).
+      fiscais" de governance.yml e o de qa.yml). Verificado por eliminação: as falhas persistem
+      com a árvore de trabalho revertida ao commit da adoção, então nenhuma delas vem de edição
+      posterior.
 
       Os testes falham por duas causas, e a distinção importa para corrigir:
 
@@ -100,9 +102,20 @@ proposal:
             a suíte ter passado de segundos para 160s. Mesmo tratamento do item 1 acima: alvo
             sintético no tmp_path, sem rede e sem copiar o alvo real.
 
-      Os 24 testes distintos que reprovam estão nomeados no laudo desta execução; os arquivos
-      são test_inventario_bites.py (7), test_orientacao_bites.py (5), test_ingestao_bites.py (3),
-      test_lgpd_bites.py (3), test_seguranca_bites.py (3) e test_sincronizacao_bites.py (3).
+      São 47 testes em DEZ arquivos — a suíte inteira menos um. Medido com a execução completa,
+      depois de uma primeira contagem truncada ter sugerido 24 em seis arquivos; o número menor
+      estava errado e teria feito esta proposta subdimensionar o próprio escopo:
+
+        test_conformance_bites.py   7      test_inventario_bites.py    7
+        test_derivacao_bites.py     6      test_alinhamento_bites.py   5
+        test_ingestao_bites.py      5      test_orientacao_bites.py    5
+        test_bootstrap_bites.py     3      test_lgpd_bites.py          3
+        test_seguranca_bites.py     3      test_sincronizacao_bites.py 3
+
+      test_sincronizacao_bites.py falha por causa distinta das demais e merece diagnóstico
+      próprio antes de correção: `git clone` do alvo sintético sai 128 dentro do teste, o que é
+      falha de montagem do fixture, não de fiscal. Pode ser ambiente; pode ser o mesmo problema
+      de substrato numa forma diferente. Não presuma que a correção dos outros nove a resolve.
 
       E VALE PARA O MOLDE TAMBÉM. O molde não tem defeito enquanto for molde, mas todo derivado
       futuro herdará o mesmo problema no mesmo instante — esta adoção é a primeira medição dele.

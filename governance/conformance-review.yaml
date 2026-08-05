@@ -91,7 +91,7 @@ review:
       summary: >
         As provas de mordida herdadas do molde não sobrevivem à derivação: os passos negativos de
         .github/workflows/governance.yml mutam o negócio de exemplo, e tests/governance sai
-        47 failed / 94 passed aqui contra verde no molde.
+        47 failed / 94 passed aqui — dez dos onze arquivos — contra verde no molde.
       disposition: risk_entry
       ref: RISK-CONF-001
       rationale: >

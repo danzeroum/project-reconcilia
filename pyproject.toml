@@ -20,11 +20,15 @@ dev = [
     "pyyaml>=6",
 ]
 
-[tool.setuptools.packages.find]
-where = ["src"]
+# NENHUM PACOTE, e é declaração, não descuido. O molde empacotava src/project/; este repositório
+# é derivado e não tem código próprio (CP-000). A busca em where=["src"] falhava o build com
+# "egg_base 'src' does not exist" — src/ deixou de existir, e diretório vazio nem chega ao git.
+# O pyproject continua sendo a fonte única das dependências dos fiscais, que é o que o CI instala.
+[tool.setuptools]
+packages = []
 
 [tool.pytest.ini_options]
 # tests/unit saiu com o negócio de exemplo (CP-000). Os testes deste repositório são os de
-# mordida dos fiscais; os do alvo rodam no CI do alvo.
+# mordida dos fiscais; os do alvo rodam no CI do alvo. Sem pythonpath: não há src/, e
+# tests/governance/conftest.py põe ci/ no sys.path por conta própria.
 testpaths = ["tests/governance"]
-pythonpath = ["src"]
