@@ -1,0 +1,14 @@
+# Superfícies de UI ligadas a capacidades. IDs estáveis (UI-*) apontam para capacidades (CAP-*).
+# Critérios de aceite explícitos dão ao agente reviewer uma régua de experiência, não um palpite.
+# Schema: harness/schemas/ui-surfaces.schema.json
+#
+# VAZIA POR ORA (CP-000): superfície aponta para capacidade, e não há capacidade ainda. O alvo
+# tem interface própria, e ela entra por ING-05-DESIGN — depois de ING-04-NEGOCIO, porque uma
+# tela declarada antes da capacidade que ela serve é exatamente a superfície órfã que ALIGN-R3
+# existe para acusar.
+schema_version: "1.0"
+metadata_version: "1.0"
+source_of_truth: true
+generated_from: null
+
+ui_surfaces: []

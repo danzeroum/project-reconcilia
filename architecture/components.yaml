@@ -1,0 +1,22 @@
+# Componentes técnicos ligados a capacidades. Fecha a rastreabilidade
+# capacidade → componente → código → teste.
+# Schema: harness/schemas/components.schema.json
+#
+# VAZIA POR ORA (CP-000). É a coleção sobre a qual a invariante do código órfão se apoia: todo
+# arquivo sob project.yaml:target.code_roots pertence a um componente ou a uma isenção declarada.
+# Enquanto o alvo não foi cartografado (ING-03-CARTOGRAFIA), não há componente a declarar — e é
+# por isso que o inventário exige workspace/target materializado em vez de sair verde por
+# percorrer conjunto vazio.
+schema_version: "1.0"
+metadata_version: "1.0"
+source_of_truth: true
+generated_from: null
+
+components: []
+
+# Arquivos sob as raízes de código que deliberadamente não pertencem a componente algum.
+# Isenção que não casa arquivo nenhum vira achado — a mesma propriedade de stages.yaml:ungoverned,
+# e é o que impede a lista de virar um lugar onde pendências dormem. Vazia aqui pela mesma razão
+# que components: a isenção do molde cobria src/project/__init__.py, que o CP-000 removeu, e
+# mantê-la seria justamente a isenção morta que o fiscal existe para acusar.
+exemptions: []

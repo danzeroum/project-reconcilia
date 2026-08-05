@@ -1,0 +1,121 @@
+# Mudança proposta: reancorar as provas de mordida do CI no alvo materializado.
+# DECLARADA E NÃO EXECUTADA (ADR-004). Schema: ../schemas/change-proposal.schema.json
+#
+# Registrada durante a adoção, ao descobrir que parte das provas de mordida herdadas do molde não
+# sobrevive à derivação. Declarar a pendência é o oposto de escondê-la: sem este arquivo, o
+# repositório teria um conjunto de passos negativos que passa a falhar por motivo estrutural, e
+# alguém acabaria "consertando" cada um até o CI ficar verde — que é como uma prova de mordida
+# vira uma prova de nada.
+schema_version: "1.0"
+metadata_version: "1.0"
+source_of_truth: true
+generated_from: null
+
+proposal:
+  id: CP-001
+  title: "Provas de mordida reancoradas no alvo: nem os passos negativos do CI nem tests/governance sobrevivem à derivação"
+  author_kind: agent
+  created_at: "2026-08-05T00:00:00Z"
+  capabilities_affected: []
+  components_affected: []
+
+  risk_assessment:
+    level: high
+    risks:
+      - RISK-CONF-001
+      - RISK-DERIV-002
+      - RISK-INGEST-001
+    rationale: >
+      MEDIDO NA ADOÇÃO DESTE REPOSITÓRIO, não previsto em tese. É a mesma forma dos CP-013,
+      CP-015, CP-016 e CP-017 do molde: regra escrita para o molde, herdada pelo derivado, que
+      só quebra quando um derivado real existe.
+
+      .github/workflows/governance.yml prova que cada fiscal MORDE mutando uma cópia do
+      repositório e exigindo que o fiscal reprove. O substrato dessas mutações é o negócio de
+      exemplo do molde — src/project/pricing.py, src/project/ports.py, capabilities[0],
+      components[0], ui_surfaces[0], tests/unit/. O CP-000 removeu esse substrato por construção,
+      e sem ele os passos abaixo não provam mais o que anunciam:
+
+        - (negativo) dado pessoal fora do inventário  — escreve em src/project/ports.py
+        - (negativo) codigo orfao                     — escreve em src/project/novo_modulo.py
+        - (negativo) raiz de código inexistente       — apaga $mut/src
+        - (negativo) adapter que engole especificador — cria $mut/src/app/a.ts
+        - (negativo) proveniência com SHA atrasado    — indexa components[0]
+        - (negativo) pending_judgment em promovido    — indexa capabilities[0]
+        - (negativo) capacidade critical sem risco    — indexa capabilities[0]
+        - (negativo) superfície de UI órfã            — indexa ui_surfaces[0]
+        - (negativo) ADR aceito sem asserção          — indexa adrs[4], hoje o ADR-005 superseded
+
+      TRÊS FORAM TRATADOS NA PRÓPRIA ADOÇÃO, e só esses três, porque só neles a correção era
+      dedutível sem executar o CI: dois passos foram REMOVIDOS junto com as asserções que
+      provavam (ADR-005-A2 e ADR-008-A6, ambas inexistentes aqui — prova de mordida de trava
+      inexistente não é prova), e "(negativo) derivado sem bloco target" foi corrigido de marcar
+      kind:derived para REMOVER o bloco target, porque no molde a mutação alcançava um estado
+      ilegal e aqui virava no-op — o passo provaria o oposto do que anuncia.
+
+      O RESTO NÃO FOI IMPROVISADO, E É A DECISÃO CENTRAL DESTA PROPOSTA. Reescrever à mão nove
+      mutações sutis sem poder executá-las produz o pior resultado disponível: um passo que sai
+      verde pela razão errada, visualmente indistinguível de um fiscal que morde. Um passo
+      negativo quebrado GRITA; um passo negativo que passa por acidente é a trava que o vigiado
+      desligou sem tocar em nada.
+
+      A FORMA DA CORREÇÃO, quando for executada:
+
+        1. SUBSTRATO. As mutações que hoje escrevem em src/project/ passam a escrever em
+           workspace/target/<raiz declarada>, o que exige um passo de bootstrap no job — o alvo
+           precisa estar materializado no SHA do lock antes de qualquer mutação de código. Isso
+           dá ao job uma dependência de rede que ele não tinha; a alternativa é um alvo sintético
+           montado no próprio $mut, sem rede, com code_roots apontando para ele. A segunda é
+           provavelmente melhor: prova a mesma coisa e não faz o CI do derivado depender da
+           disponibilidade do repositório do alvo.
+
+        2. ÍNDICE. Nenhuma mutação deve indexar coleção por posição. adrs[4] já aponta para outro
+           ADR do que apontava quando foi escrita. Selecionar por predicado — "o primeiro ADR
+           accepted", "a primeira capacidade" — e FALHAR EXPLICITAMENTE quando o predicado não
+           casa nada, em vez de deixar o IndexError decidir o resultado do passo.
+
+        3. VERIFICAÇÃO. Cada passo reancorado precisa ser observado falhando quando a trava é
+           removida, não apenas passando. É o que distingue esta proposta de um conserto: o
+           critério de aceite não é "o CI ficou verde", é "cada passo foi visto reprovando pela
+           razão certa".
+
+      NÃO É SÓ O WORKFLOW: tests/governance TEM O MESMO PROBLEMA, e maior. Medido nesta adoção,
+      com o alvo já materializado: `pytest tests/governance` sai 47 failed / 94 passed aqui, e
+      18/18 passed no molde para o mesmo arquivo test_inventario_bites.py. Não é regressão da
+      adoção — é a mesma herança, na suíte que roda em DOIS workflows (o passo "Testes dos
+      fiscais" de governance.yml e o de qa.yml).
+
+      Os testes falham por duas causas, e a distinção importa para corrigir:
+
+        (a) BASELINE. test_baseline_do_molde_esta_conforme afirma, no próprio nome, que o
+            repositório está verde antes da mutação. Num derivado recém-adotado ele está
+            vermelho POR CONSTRUÇÃO — 270 achados de código e teste órfão, um por arquivo do
+            alvo — que é o que docs/COMO-ADOTAR.md descreve como o estado esperado. O teste não
+            está errado; ele é sobre o molde. O equivalente aqui é "o baseline tem exatamente os
+            achados que a fase de ingestão pendente explica, e nenhum outro" — uma afirmação
+            mais forte, e que continua morde ndo depois que a ingestão fechar.
+
+        (b) SUBSTRATO. O resto escreve em src/project/, indexa components[0]/capabilities[0] ou
+            copia o repositório inteiro — incluindo agora workspace/target, o que também explica
+            a suíte ter passado de segundos para 160s. Mesmo tratamento do item 1 acima: alvo
+            sintético no tmp_path, sem rede e sem copiar o alvo real.
+
+      Os 24 testes distintos que reprovam estão nomeados no laudo desta execução; os arquivos
+      são test_inventario_bites.py (7), test_orientacao_bites.py (5), test_ingestao_bites.py (3),
+      test_lgpd_bites.py (3), test_seguranca_bites.py (3) e test_sincronizacao_bites.py (3).
+
+      E VALE PARA O MOLDE TAMBÉM. O molde não tem defeito enquanto for molde, mas todo derivado
+      futuro herdará o mesmo problema no mesmo instante — esta adoção é a primeira medição dele.
+      A correção estrutural pertence lá; esta proposta é o registro de onde ela dói primeiro.
+
+  required_gates:
+    - metadata-validation
+    - unit-tests
+
+  tests_required:
+    - tests/governance/test_conformance_bites.py
+    - tests/governance/test_derivacao_bites.py
+    - tests/governance/test_inventario_bites.py
+
+  human_approval_required: true
+  change_mode: pull_request

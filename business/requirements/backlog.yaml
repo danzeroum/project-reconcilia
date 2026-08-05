@@ -1,0 +1,13 @@
+# Backlog de requisitos, cada item ligado a uma capacidade (CAP-*). Dá ao agente o QUE fazer e por
+# quê, sem inventar escopo. Um item pode citar o risco que introduz e depender de outro.
+# Schema: harness/schemas/backlog.schema.json
+#
+# VAZIO POR ORA (CP-000). Os REQ-* do molde descreviam o negócio de exemplo; herdá-los aqui
+# daria ao agente um "o que fazer" sobre um produto que este repositório não governa — pior que
+# não ter backlog nenhum. Preenchido por ING-04-NEGOCIO a partir do que o alvo já documenta.
+schema_version: "1.0"
+metadata_version: "1.0"
+source_of_truth: true
+generated_from: null
+
+items: []

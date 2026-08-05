@@ -1,0 +1,18 @@
+# Fonte ÚNICA do SHA do alvo. Nenhum outro arquivo restata este valor — nem project.yaml, nem
+# um metadado, nem um laudo. É a mesma regra de requirements-qa.txt aplicada ao alvo: duas cópias
+# de um número derivam, e a comparação entre "o que o metadado descreve" e "o que o alvo é hoje"
+# passa a mentir sem erro nem aviso.
+#
+# Este repositório é DERIVADO: governa o alvo declarado em project.yaml:target, ancorado no
+# commit abaixo. Mover o SHA é decisão explícita — é o que separa "o metadado descreve o alvo"
+# de "o metadado descrevia o alvo em algum momento". Quem move roda /sincronizar, não este editor.
+#
+# Schema: harness/schemas/target-lock.schema.json
+schema_version: "1.0"
+metadata_version: "1.0"
+source_of_truth: true
+generated_from: null
+
+kind: derived
+# HEAD de danzeroum/reconcilia@master no momento da adoção (2026-08-05).
+target_sha: "2a89a1b293a58548c7e90c4a1644e7a33ee973e8"

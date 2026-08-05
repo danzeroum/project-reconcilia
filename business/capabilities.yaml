@@ -1,0 +1,16 @@
+# Capacidades de negócio com rastreabilidade física: cada capacidade aponta para código e teste
+# reais. IDs estáveis (CAP-...) formam as arestas duráveis do grafo.
+# Schema: harness/schemas/capabilities.schema.json
+# O fiscal semântico só exige que source_paths/test_paths existam para status implemented/verified.
+#
+# VAZIA POR ORA, e é um estado declarado, não um esquecimento. Este repositório é derivado e
+# nasceu sem capacidade nenhuma (CP-000): as do molde descreviam um negócio de exemplo que este
+# não governa. As reais entram por ING-04-NEGOCIO, lidas do alvo e com proveniência ancorada no
+# SHA de target.lock. O piso de um item está suspenso apenas enquanto project.yaml declarar
+# lifecycle: incubating — promover o lifecycle sem preencher isto aqui reprova (CP-017).
+schema_version: "1.0"
+metadata_version: "1.0"
+source_of_truth: true
+generated_from: null
+
+capabilities: []
