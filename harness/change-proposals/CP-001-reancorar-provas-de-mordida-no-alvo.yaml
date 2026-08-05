@@ -137,6 +137,27 @@ proposal:
       que é acoplamento que ninguém pediu. A primeira é preferível e deve vir ANTES da
       reancoragem: um passo negativo que não roda é indistinguível de um que passa.
 
+      E ATINGE DOIS FISCAIS DECLARADOS EM harness/stages.yaml, que é onde deixa de ser
+      inconveniência e vira buraco de governança. Medido no mesmo runner:
+
+        - STAGE-TESTS declara enforced_by o passo "Testes dos fiscais" de governance.yml. É o
+          passo 7, depois do 6 que reprova: sai 'skipped'.
+        - STAGE-QA-CONFIG declara enforced_by o passo "Auditoria passiva (Trabalho A — só se
+          escopo autorizar)" de qa.yml. Fica depois dos testes de mordida, que reprovam: sai
+          'skipped'. O passo de inventário da suíte, ao lado dele, também.
+
+      Duas etapas do repositório declaram fiscal que nunca executa. E o fiscal do fiscal não
+      pega: audit_governance confere que o passo EXISTE com aquele nome, não que ele RODA. A
+      régua da casa diz "etapa sem fiscal é achado"; hoje "etapa com fiscal inalcançável" não é
+      achado nenhum, e as duas situações são indistinguíveis de fora. É a mesma distância entre
+      "o fiscal existe" e "o fiscal morde" que esta suíte inteira existe para fechar, reaberta
+      uma camada acima.
+
+      Não proponho aqui a trava que fecharia isso — exigiria audit_governance ler o resultado do
+      workflow, e um fiscal que depende de API do GitHub é outra decisão, com outro custo. O que
+      esta proposta afirma é mais modesto e verificável: com os passos negativos fora do gate,
+      as duas etapas voltam a ter fiscal que roda, e a lacuna some sem precisar da trava nova.
+
       Herança do molde outra vez, pelo mesmo mecanismo de sempre: lá a linha de base está
       sempre verde, então o passo 6 nunca reprova e a ordem dos passos nunca importou.
 
