@@ -24,6 +24,14 @@ jobs:
       - name: Instalar ferramentas de validação
         run: pip install "jsonschema>=4" "pyyaml>=6" "pytest>=8"
 
+      # Genérico de propósito (CP-002): lê project.yaml e target.lock, não nomeia alvo algum.
+      # Num molde imprime "nada a materializar" e sai 0. Todos os passos abaixo dependem dele
+      # num derivado — inclusive os negativos, que mutam uma cópia do repositório.
+      - name: Materializar o alvo no SHA de target.lock
+        run: python ci/bootstrap.py --skip-deps --no-validate
+
+      # Passo SEPARADO do de cima, e é o que impede --no-validate de virar um jeito de não
+      # validar. harness/stages.yaml referencia este passo pelo nome em enforced_by.
       - name: Validação total do projeto
         run: python ci/validate_all.py
 

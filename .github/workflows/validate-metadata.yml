@@ -43,5 +43,13 @@ jobs:
           python-version: "3.11"
       - name: Instalar dependências do fiscal
         run: pip install "jsonschema>=4" "pyyaml>=6"
+      # Genérico de propósito (CP-002): lê project.yaml e target.lock, não nomeia alvo algum.
+      # Num molde imprime "nada a materializar" e sai 0; num derivado clona o alvo no SHA do
+      # lock. Sem este passo, workspace/target não existe no runner e a invariante do código
+      # órfão não chega a ser avaliada — o fiscal não reprova nem aprova, ele fica cego.
+      - name: Materializar o alvo no SHA de target.lock
+        run: python ci/bootstrap.py --skip-deps --no-validate
+      # Passo SEPARADO, e é o que impede --no-validate de virar um jeito de não validar.
+      # harness/stages.yaml referencia este passo pelo nome em enforced_by.
       - name: Validação total do projeto
         run: python ci/validate_all.py

@@ -84,6 +84,12 @@ jobs:
       - name: Instalar ferramentas
         run: pip install -e ".[dev]"
 
+      # Genérico de propósito (CP-002). Os testes de mordida copiam o repositório e mutam a
+      # cópia; sem o alvo materializado, boa parte deles reprova por "workspace/target ausente"
+      # em vez de pelo que cada um se propõe a provar.
+      - name: Materializar o alvo no SHA de target.lock
+        run: python ci/bootstrap.py --skip-deps --no-validate
+
       # No molde este passo rodava os testes de unidade do negócio de exemplo. Este repositório é
       # derivado e não tem código próprio (CP-000): o código que ele governa é o do alvo, cujos
       # testes rodam no CI DO ALVO, não neste. O que se prova aqui é que os fiscais deste

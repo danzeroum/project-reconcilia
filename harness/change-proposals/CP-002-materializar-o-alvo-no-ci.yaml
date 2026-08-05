@@ -1,0 +1,90 @@
+# Mudança proposta: o CI do derivado materializa o alvo antes de fiscalizar.
+# Declarada ANTES de executada (ADR-004). Schema: ../schemas/change-proposal.schema.json
+schema_version: "1.0"
+metadata_version: "1.0"
+source_of_truth: true
+generated_from: null
+
+proposal:
+  id: CP-002
+  title: "CI do derivado materializa o alvo antes de validar: fiscal cego não é fiscal verde nem fiscal vermelho, é fiscal ausente"
+  author_kind: agent
+  created_at: "2026-08-05T00:00:00Z"
+  capabilities_affected: []
+  components_affected: []
+
+  risk_assessment:
+    level: high
+    risks:
+      - RISK-DERIV-001
+      - RISK-CONF-001
+      - RISK-INGEST-001
+    rationale: >
+      MEDIDO NO CI DESTE PR, e o diagnóstico inicial estava errado — vale registrar porque a
+      correção depende dele. Esperava-se que o CI reprovasse pelos 270 achados de código órfão.
+      Não é o que acontece: `python ci/validate_all.py` no runner acusa EXATAMENTE UM achado,
+
+        [inventário] workspace/target ausente: o alvo não foi materializado
+
+      e os outros cinco fiscais passam. Nenhum workflow roda ci/bootstrap.py, então
+      workspace/target não existe no runner e a invariante do código órfão nunca chega a ser
+      avaliada. É um estado pior que 270 achados, e a diferença não é de grau: 270 achados é o
+      fiscal dizendo o que encontrou; isto é o fiscal dizendo que não conseguiu olhar. Os mesmos
+      44 testes de mordida que reprovam no runner reprovam com essa mesma mensagem no assert.
+
+      HERANÇA DO MOLDE, de novo. Lá ci/bootstrap.py imprime "nada a materializar" e sai 0 —
+      molde não governa alvo algum, então o buraco nunca aparece. O derivado é o primeiro
+      repositório onde a ausência do passo importa.
+
+      A MUDANÇA, em duas partes:
+
+        1. ci/bootstrap.py ganha --no-validate: materializa (etapas 1 a 4) e para antes da
+           etapa 5. Hoje materializar e validar são a mesma chamada, e por isso não existe
+           maneira de preparar o ambiente sem já emitir o veredito — o passo de CI chamado
+           "Validação total do projeto" reprovaria dentro de um passo chamado "bootstrap", e o
+           nome do passo que fica vermelho é meio da mensagem que o CI entrega.
+
+        2. Os três workflows que fiscalizam ganham um passo de materialização ANTES do passo de
+           validação: governance.yml (full-validation), validate-metadata.yml e qa.yml
+           (inventory-and-passive, que precisa do workspace para os testes de mordida).
+
+      O PASSO CONTINUA GENÉRICO, e isso é requisito, não detalhe. `python ci/bootstrap.py
+      --skip-deps --no-validate` não nomeia alvo nenhum: lê project.yaml e target.lock, e num
+      molde imprime "nada a materializar" e sai 0. O mesmo workflow serve aos dois papéis, que é
+      o que permite ele voltar para o molde sem virar caso especial. A alternativa óbvia — um
+      `git clone` escrito no workflow — foi recusada por dois motivos: cravaria a URL do alvo em
+      .github/ (que ADR-008-A5 não varre, mas a regra não é sobre onde o fiscal olha) e criaria
+      uma segunda implementação de materialização, livre para divergir de bootstrap.py em
+      silêncio.
+
+      O RISCO QUE ESTA PROPOSTA INTRODUZ, declarado porque é real: --no-validate é, por
+      construção, um jeito de rodar bootstrap sem validar. Posto no passo errado, transformaria
+      um passo de validação num passo que não valida — a trava que o vigiado desliga sem tocar
+      em nada, que é exatamente o modo de falha que esta harness existe para impedir. Três
+      coisas o contêm, e nenhuma delas é confiança:
+
+        - os workflows mantêm `python ci/validate_all.py` como passo SEPARADO e explícito;
+        - harness/stages.yaml referencia esse passo pelo NOME em enforced_by, então removê-lo
+          quebra a cobertura de etapa e audit_governance acusa;
+        - um teste de mordida novo fixa o contrato dos dois lados: --no-validate sai 0 sem
+          validar, e a ausência da flag continua propagando o código do validate_all.
+
+      NÃO DEIXA O PR VERDE, e é importante que não deixe. Depois desta mudança os jobs passam a
+      reprovar pelos 270 achados de código e teste órfão — o estado real de um derivado que
+      ainda não foi ingerido, e que docs/COMO-ADOTAR.md descreve como esperado. O ganho não é
+      cor de badge: é o CI voltar a medir o que diz medir.
+
+      CUSTO COLATERAL, medido: com o workspace materializado, tests/governance passa de ~37s
+      para ~187s no runner, porque o fixture repo_copy copia a árvore inteira — incluindo o
+      alvo — a cada teste. Está no escopo do CP-001, que já propõe alvo sintético no tmp_path.
+
+  required_gates:
+    - metadata-validation
+    - unit-tests
+    - inventory
+
+  tests_required:
+    - tests/governance/test_bootstrap_bites.py
+
+  human_approval_required: true
+  change_mode: pull_request

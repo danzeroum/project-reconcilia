@@ -134,6 +134,41 @@ def test_materializa_no_sha_do_lock_e_e_idempotente(repo_copy, alvo_sintetico, r
     assert _git("rev-parse", "HEAD", cwd=ws) == primeiro
 
 
+def test_no_validate_materializa_e_nao_julga(repo_copy, alvo_sintetico, run_bootstrap):
+    """--no-validate prepara o ambiente e para. Metade do contrato do CP-002.
+
+    O alvo sintético tem src/app.py, que nenhum componente reivindica — então validate_all
+    reprovaria por código órfão. Sair 0 aqui prova que a etapa de validação não rodou, e o laudo
+    sem chave 'resultado' de veredito é o que impede "ok" de ser lido como "conforme".
+    """
+    alvo, primeiro = alvo_sintetico
+    host = _vira_derivado(repo_copy, alvo, primeiro)
+
+    code, laudo = run_bootstrap(repo_copy, ["--no-validate"], host=host)
+    assert code == 0, laudo
+    assert laudo["etapas"]["workspace"]["acao"] == "materializado", laudo
+    assert _git("rev-parse", "HEAD", cwd=repo_copy / "workspace/target") == primeiro
+
+
+def test_sem_no_validate_o_veredito_do_validate_all_propaga(repo_copy, alvo_sintetico,
+                                                            run_bootstrap):
+    """A outra metade, e a que importa: sem a flag, o bootstrap continua julgando.
+
+    É a trava contra o modo de falha que o CP-002 declara ao introduzir --no-validate — uma flag
+    que desliga a validação é, por construção, um jeito de fazer um passo de CI passar sem
+    fiscalizar. Este teste fixa que a ausência dela NÃO é opcional: mesmo material, mesmo alvo,
+    veredito diferente. Se um dia os dois testes saírem iguais, a flag deixou de ser uma escolha
+    e virou o padrão silencioso.
+    """
+    alvo, primeiro = alvo_sintetico
+    host = _vira_derivado(repo_copy, alvo, primeiro)
+
+    code, laudo = run_bootstrap(repo_copy, host=host)
+    assert code != 0, ("bootstrap sem --no-validate saiu 0 sobre um alvo com código órfão: "
+                       "a etapa de validação virou decorativa", laudo)
+    assert laudo["resultado"] in ("divergencias", "fiscal-nao-fiscalizou"), laudo
+
+
 def test_check_drift_reporta_atraso_sem_corrigir(repo_copy, alvo_sintetico, run_bootstrap):
     """O alvo andou dois commits; o lock não. O drift é reportado, e o lock NÃO avança sozinho:
     movê-lo sem revisar o metadado troca um drift visível por um metadado errado."""

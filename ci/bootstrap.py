@@ -189,9 +189,20 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Cold start idempotente do repositório.")
     parser.add_argument("--check-drift", action="store_true",
                         help="só compara target.lock com o remoto; não materializa nem valida")
+    # Separa preparar de julgar. Existe porque o CI precisa das duas coisas em passos DISTINTOS:
+    # o nome do passo que fica vermelho é metade da mensagem que o CI entrega, e "bootstrap
+    # falhou" não diz a mesma coisa que "validação total falhou". Perigosa se posta no passo
+    # errado — vira um passo de validação que não valida —, e é por isso que os workflows
+    # mantêm validate_all.py como passo separado, que stages.yaml referencia pelo nome.
+    parser.add_argument("--no-validate", action="store_true",
+                        help="materializa o alvo e para antes de validar (etapas 1 a 4)")
     parser.add_argument("--skip-deps", action="store_true", help="não instala dependências")
     parser.add_argument("--quiet", action="store_true")
     args = parser.parse_args(argv)
+
+    if args.check_drift and args.no_validate:
+        parser.error("--check-drift e --no-validate são mutuamente exclusivos: o primeiro já "
+                     "para antes de materializar, e combiná-los esconde qual dos dois venceu")
 
     estado: dict = {"schema_version": "1.0", "etapas": {}}
     try:
@@ -234,6 +245,16 @@ def main(argv: list[str] | None = None) -> int:
     if args.check_drift:  # molde: nada a comparar
         estado["resultado"] = "ok"
         emit(estado, args.quiet)
+        return 0
+
+    if args.no_validate:
+        # "ok" aqui significa "o ambiente está de pé", nunca "o repositório está conforme" — e a
+        # distinção é a razão de o laudo existir: quem ler harness/state/bootstrap.json vê que
+        # não há etapa de validação registrada, em vez de um veredito que ninguém emitiu.
+        estado["resultado"] = "ok"
+        emit(estado, args.quiet)
+        if not args.quiet:
+            print(f"• próximo passo: {estado['proximo_passo']}")
         return 0
 
     code = validate()
