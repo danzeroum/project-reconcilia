@@ -366,4 +366,117 @@ risks:
 
 # Ativos que deliberadamente não precisam de risco associado. Isenção que não casa ativo algum é
 # ela própria um achado — sem isso a lista viraria o lugar onde a cobertura é fingida com uma linha.
-risk_exemptions: []
+#
+# AS VINTE E DUAS ABAIXO SÃO DA INGESTÃO, e todas dizem a mesma coisa sobre o ALVO: ele tem
+# código maduro cuja razão de existir não está registrada em backlog nenhum. Isso é um achado
+# sobre o alvo, não sobre este repositório, e ele não some quando a ingestão termina — some
+# quando alguém do produto escrever a story que falta, ou decidir que ela não precisa existir.
+#
+# A alternativa seria inventar o vínculo: apontar cada componente para o requisito mais parecido
+# e ficar verde. Seria a aresta falsa que ALIGN-R4 existe para questionar, e ela sobreviveria
+# calada a todas as validações futuras. Preferi a lista longa e chata.
+risk_exemptions:
+  # --- Grupo 1: a capacidade não tem épico no alvo (11 ativos).
+  # CAP-ACCESS-CONTROL e CAP-PLATFORM foram derivadas de prosa (SECURITY.md,
+  # ARCHITECTURE-POSTURE.md), não de user-stories.yaml — o alvo as implementa e nunca as
+  # planejou em backlog. Um requisito para elas teria de ser escrito, não colhido.
+  - ref: CMP-SECURITY
+    justification: >
+      CAP-ACCESS-CONTROL não tem épico em docs/business/user-stories.yaml do alvo: JWT, hash de
+      senha, rate limit e blocklist de JTI existem no código e são descritos em prosa em
+      SECURITY.md. Vincular a um REQ exigiria inventar a story que o alvo nunca escreveu.
+  - ref: CMP-HTTP-MIDDLEWARE
+    justification: >
+      Mesma razão de CMP-SECURITY: middleware de autenticação, tenant, auditoria e rate limit é
+      infraestrutura de controle de acesso que o alvo implementa sem story correspondente.
+  - ref: CMP-AUTH-API
+    justification: >
+      Mesma razão: os endpoints de autenticação existem e são documentados em API-REFERENCE.md,
+      mas nenhum épico do alvo os planeja.
+  - ref: CMP-USER-PERSISTENCE
+    justification: >
+      Mesma razão: o repositório de usuários serve o controle de acesso, capacidade que o alvo
+      não descreve em backlog.
+  - ref: CMP-UI-PAGES-ACCESS
+    justification: >
+      Mesma razão, na camada de interface: as telas de login e de configurações servem o controle
+      de acesso, e o alvo não tem story que as descreva.
+  - ref: UI-LOGIN
+    justification: >
+      A tela existe em conciliaai-frontend/src/pages/Login e serve CAP-ACCESS-CONTROL, capacidade
+      sem épico no alvo. Não há requisito da mesma capacidade a que ela possa apontar.
+  - ref: UI-SETTINGS
+    justification: >
+      Mesma razão de UI-LOGIN: a tela de configurações serve controle de acesso e preferências, e
+      o alvo não documenta story para ela.
+  - ref: CMP-DOMAIN-ENTITIES
+    justification: >
+      CAP-PLATFORM não tem épico: as treze entidades de domínio são o substrato de todas as
+      outras capacidades, e o alvo as descreve em docs/business/domain-model.yaml, que é modelo
+      e não backlog. Um requisito aqui seria escrito por mim, não colhido dele.
+  - ref: CMP-DOMAIN-VALUES
+    justification: >
+      Mesma razão de CMP-DOMAIN-ENTITIES: objetos de valor (dinheiro, NSU, percentual, plano de
+      parcelamento) são vocabulário do domínio, não funcionalidade planejada.
+  - ref: CMP-DOMAIN-PORTS
+    justification: >
+      Mesma razão: as portas de repositório são contrato entre domínio e persistência. Elas
+      aparecem como interface declarada (IFC-TRANSACTION-REPOSITORY), não como requisito.
+  - ref: CMP-PERSISTENCE
+    justification: >
+      Mesma razão: mapeamento e repositórios PostgreSQL implementam as portas acima. O alvo
+      documenta a decisão em ARCHITECTURE-POSTURE.md, nunca como story.
+  - ref: CMP-API-CORE
+    justification: >
+      Mesma razão: montagem da aplicação, envelope de erro, dependências e serialização. O alvo
+      descreve o contrato de erro e o X-Request-ID em ARCHITECTURE-POSTURE.md, não em backlog.
+  - ref: CMP-INFRA-CORE
+    justification: >
+      Mesma razão: cache, conexão de banco e logging estruturado. Infraestrutura transversal que
+      nenhuma story do alvo reivindica.
+
+  # --- Grupo 2: a funcionalidade existe no código e não tem story ALGUMA no alvo (8 ativos).
+  # Este grupo é o achado mais interessante da ingestão: não é ausência de vínculo, é ausência
+  # de intenção registrada. Conciliação bancária por OFX, CRUD de vendas e de transações são
+  # partes vivas do sistema que o backlog do alvo não menciona em nenhum dos cinco épicos.
+  - ref: CMP-BANK-OFX
+    justification: >
+      O alvo tem parser de extrato OFX e todo um fluxo de conciliação bancária
+      (src/application/use_cases/bank_reconciliation/), e nenhum dos cinco épicos de
+      user-stories.yaml o menciona. Funcionalidade sem intenção registrada — achado sobre o
+      alvo, não sobre este repositório.
+  - ref: UI-BANK-RECONCILIATION
+    justification: >
+      A tela de conciliação bancária existe e não há story que a descreva, pela mesma razão de
+      CMP-BANK-OFX: o fluxo bancário inteiro está fora do backlog documentado do alvo.
+  - ref: CMP-SALES
+    justification: >
+      O serviço de vendas sustenta o lado 'venda' de toda conciliação, e o backlog do alvo só
+      trata vendas indiretamente, dentro das stories de conciliação. Não há requisito próprio.
+  - ref: UI-SALES
+    justification: >
+      A tela de vendas, incluindo importação por CSV, existe sem story correspondente — mesma
+      lacuna de CMP-SALES, na camada de interface.
+  - ref: CMP-TRANSACTIONS
+    justification: >
+      O serviço de transações é o lado 'adquirente' da conciliação e não tem story própria: as
+      stories do EPIC-1 falam de coleta, não de consulta e gestão do que foi coletado.
+  - ref: UI-TRANSACTIONS
+    justification: >
+      A tela de transações existe sem story correspondente, pela mesma razão de CMP-TRANSACTIONS.
+  - ref: CMP-UI-SHELL
+    justification: >
+      Casca da aplicação de interface: tema, store, utilitários, cliente HTTP e ponto de entrada.
+      É andaime de tudo e requisito de nada; vinculá-lo a uma story seria escolher uma arbitrária.
+  - ref: CMP-REPORTING
+    justification: >
+      Aqui a story EXISTE — US-012, "exportar relatório de reconciliação" — mas pertence ao
+      EPIC-2, que virou CAP-RECONCILIATION, enquanto o serviço de relatório ficou em
+      CAP-DASHBOARD-NOTIFICATIONS junto com o dashboard que o consome. O fiscal exige que
+      implements aponte para requisito da MESMA capacidade, e está certo em exigir. A escolha
+      honesta é declarar a divergência aqui em vez de forçar a fronteira do componente para
+      caber no vínculo, ou de fingir uma capacidade que o alvo não separou assim.
+  - ref: UI-REPORTS
+    justification: >
+      Mesma divergência de CMP-REPORTING: a tela de relatórios serve CAP-DASHBOARD-NOTIFICATIONS
+      e a única story de exportação vive em CAP-RECONCILIATION.

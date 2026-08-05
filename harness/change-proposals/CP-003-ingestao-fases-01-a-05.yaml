@@ -1,0 +1,96 @@
+# Mudança proposta: ingestão do alvo, fases ING-01 a ING-05 — o bloco sem gate.
+# Declarada ANTES de executada (ADR-004). Schema: ../schemas/change-proposal.schema.json
+schema_version: "1.0"
+metadata_version: "1.0"
+source_of_truth: true
+generated_from: null
+
+proposal:
+  id: CP-003
+  title: "Ingestão do alvo, fases ING-01 a ING-05: 229/229 arquivos com dono, e o que o alvo não documenta fica declarado como lacuna"
+  author_kind: agent
+  created_at: "2026-08-05T00:00:00Z"
+
+  capabilities_affected:
+    - CAP-ACQUIRER-INTEGRATION
+    - CAP-RECONCILIATION
+    - CAP-ANOMALY-DETECTION
+    - CAP-DASHBOARD-NOTIFICATIONS
+    - CAP-CASH-FLOW
+    - CAP-ACCESS-CONTROL
+    - CAP-PLATFORM
+  components_affected: []
+
+  risk_assessment:
+    level: high
+    risks:
+      - RISK-INGEST-001
+      - RISK-ALIGN-001
+      - RISK-META-001
+      - RISK-DERIV-001
+    rationale: >
+      Executa o bloco coeso de fases sem gate de harness/pipeline/ingest.yaml — ING-01 a ING-05,
+      mais a regeneração de ING-08 — e PARA no gate humano de ING-06-GOVERNANCA. Risco high por
+      volume e por alcance: cria o metadado que descreve um sistema financeiro inteiro, e é sobre
+      ele que todos os fiscais passam a operar.
+
+      O QUE ENTROU, com proveniência ancorada em 2a89a1b:
+
+        - 7 capacidades. As CINCO primeiras SÃO os épicos que o alvo documenta em
+          docs/business/user-stories.yaml, com derived_from apontando para o épico exato — não
+          são leitura minha do código, são a intenção que ele próprio declara. As duas últimas
+          (controle de acesso, plataforma) não têm épico: o alvo as implementa e descreve em
+          prosa, e a proveniência aponta para o documento que de fato as descreve.
+        - 39 componentes cobrindo 229/229 arquivos, mais 4 isenções para marcadores de pacote.
+        - 4 interfaces, todas com exposes que o inventário LEU do arquivo do alvo.
+        - 17 regras de negócio em 3 arquivos, colhidas de docs/business/business-rules.yaml
+          (BR-001..BR-031), com o id do alvo no rationale de cada uma.
+        - 20 requisitos, um por user story documentada.
+        - 12 superfícies de UI, uma por página real do frontend.
+
+      DUAS COISAS QUE O FISCAL ME CORRIGIU, e valem mais que o resultado:
+
+        1. depends_on ESCRITO À MÃO ESTAVA ERRADO. A primeira versão declarava as dependências
+           que eu supunha; o fiscal reprovou SESSENTA arestas de acoplamento que existem no alvo
+           e que nenhuma declaração registrava. Passei a derivar depends_on do grafo de imports
+           do próprio inventário. Um depends_on incompleto afirma um desenho mais limpo do que o
+           sistema tem, e é o tipo de mentira que ninguém percebe porque parece organização.
+
+        2. TODO REQUISITO 'proposed' ESTAVA ERRADO. O alvo marca o próprio user-stories.yaml
+           como status "draft" e não declara conclusão por story, então 'done' seria invenção —
+           mas o fiscal mostrou que 'proposed' para todos também é incoerente: um componente
+           'implemented' não implementa requisito ainda não iniciado. Os requisitos que algum
+           componente reivindica ficaram 'in_progress'; os demais, 'proposed'.
+
+      O QUE NÃO FIZ, e é a decisão central desta proposta. Vinte e dois ativos ficaram sem
+      vínculo com requisito, e eu NÃO os liguei ao requisito mais parecido para zerar o
+      contador. Estão em governance/risk-register.yaml:risk_exemptions, um a um, com a razão
+      real de cada: duas capacidades inteiras sem épico no alvo; conciliação bancária por OFX,
+      vendas e transações vivos no código e ausentes dos cinco épicos; e o serviço de relatório,
+      cuja story existe mas num épico que virou outra capacidade. É achado sobre o ALVO, não
+      sobre este repositório, e some quando alguém do produto escrever a story que falta — não
+      quando a ingestão terminar.
+
+      NENHUM JULGAMENTO FOI EMITIDO. Todos os documentos derivados saem source_of_truth: false
+      com generated_from preenchido; risk_level e owner saem pending_judgment. É a regra 3 do
+      /ingerir: quem ingere não julga. Promover é ING-07, e tem gate humano — e enquanto o
+      sentinela estiver lá, check_pending_judgment reprova qualquer tentativa de declarar os
+      documentos prontos com ele dentro.
+
+      O ÚNICO CONTEÚDO SEM ORIGEM RASTREÁVEL NO ALVO são os critérios de aceite das 12
+      superfícies de UI: o alvo descreve as telas e não declara condição de aceite para nenhuma.
+      Está dito no cabeçalho do próprio arquivo e registrado como CONF-008, em vez de ficar
+      implícito. Pela mesma razão, 'satisfies' está ausente em seis das doze.
+
+  required_gates:
+    - inventory
+    - metadata-validation
+    - unit-tests
+
+  tests_required:
+    - tests/governance/test_inventario_bites.py
+    - tests/governance/test_ingestao_bites.py
+    - tests/governance/test_alinhamento_bites.py
+
+  human_approval_required: true
+  change_mode: pull_request

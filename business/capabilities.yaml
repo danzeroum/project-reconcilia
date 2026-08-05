@@ -1,16 +1,387 @@
-# Capacidades de negócio com rastreabilidade física: cada capacidade aponta para código e teste
-# reais. IDs estáveis (CAP-...) formam as arestas duráveis do grafo.
-# Schema: harness/schemas/capabilities.schema.json
-# O fiscal semântico só exige que source_paths/test_paths existam para status implemented/verified.
+# Capacidades de negócio do ALVO, derivadas na fase ING-04-NEGOCIO.
 #
-# VAZIA POR ORA, e é um estado declarado, não um esquecimento. Este repositório é derivado e
-# nasceu sem capacidade nenhuma (CP-000): as do molde descreviam um negócio de exemplo que este
-# não governa. As reais entram por ING-04-NEGOCIO, lidas do alvo e com proveniência ancorada no
-# SHA de target.lock. O piso de um item está suspenso apenas enquanto project.yaml declarar
-# lifecycle: incubating — promover o lifecycle sem preencher isto aqui reprova (CP-017).
+# As cinco primeiras SÃO os épicos que o alvo documenta em docs/business/user-stories.yaml —
+# não são leitura minha do código, são a intenção que ele próprio declara, e derived_from
+# aponta para o épico exato. As duas últimas não têm épico: o alvo as implementa e as
+# descreve em prosa (SECURITY.md, ARCHITECTURE-POSTURE.md), nunca em backlog. Não inventei
+# intenção para elas — a proveniência aponta para o documento que de fato as descreve.
+#
+# source_of_truth: false. Este documento foi DERIVADO, não autorado: quem ingere não julga
+# (regra 3 do /ingerir). risk_level e owners saem pending_judgment e só viram julgamento na
+# fase ING-07-PROMOCAO, que tem gate humano. Enquanto o sentinela estiver aqui, promover o
+# documento a source_of_truth:true é reprovado por check_pending_judgment.
+# Schema: harness/schemas/capabilities.schema.json
 schema_version: "1.0"
 metadata_version: "1.0"
-source_of_truth: true
-generated_from: null
+source_of_truth: false
+generated_from: "harness/pipeline/ingest.yaml:ING-04-NEGOCIO"
 
-capabilities: []
+capabilities:
+  - id: CAP-ACQUIRER-INTEGRATION
+    name: Integração com adquirentes
+    status: implemented
+    owners:
+      business_owner: pending_judgment
+      technical_owner: pending_judgment
+    risk_level: pending_judgment
+    source_paths:
+      - workspace/target/src/api/v1/routes/acquirers.py
+      - workspace/target/src/api/v1/routes/auto_import.py
+      - workspace/target/src/api/v1/routes/cielo_conciliator.py
+      - workspace/target/src/api/v1/routes/ingestion.py
+      - workspace/target/src/application/services/auto_import_service.py
+      - workspace/target/src/application/services/ingestion_service.py
+      - workspace/target/src/application/use_cases/cielo_conciliator/__init__.py
+      - workspace/target/src/application/use_cases/cielo_conciliator/import_cielo_report.py
+      - workspace/target/src/infrastructure/acquirers/__init__.py
+      - workspace/target/src/infrastructure/acquirers/base_parser.py
+      - workspace/target/src/infrastructure/acquirers/cielo_agiliza_parser.py
+      - workspace/target/src/infrastructure/acquirers/cielo_client.py
+      - workspace/target/src/infrastructure/acquirers/cielo_conciliator_client.py
+      - workspace/target/src/infrastructure/acquirers/cielo_edi_client.py
+      - workspace/target/src/infrastructure/acquirers/cielo_edi_parser.py
+      - workspace/target/src/infrastructure/acquirers/rede_api_parser.py
+      - workspace/target/src/infrastructure/acquirers/rede_client.py
+      - workspace/target/src/infrastructure/acquirers/rede_edi_client.py
+      - workspace/target/src/infrastructure/acquirers/rede_edi_parser.py
+      - workspace/target/src/infrastructure/acquirers/rede_eefi_parser.py
+      - workspace/target/src/infrastructure/acquirers/rede_torc_parser.py
+      - workspace/target/src/infrastructure/acquirers/registry.py
+      - workspace/target/src/infrastructure/acquirers/stone_api_client.py
+      - workspace/target/src/infrastructure/acquirers/stone_parser.py
+      - workspace/target/src/infrastructure/parsers/__init__.py
+      - workspace/target/src/infrastructure/parsers/base_parser.py
+      - workspace/target/src/infrastructure/parsers/rede_edi_parser.py
+      - workspace/target/src/infrastructure/parsers/rede_layouts.py
+      - workspace/target/src/infrastructure/scheduler/__init__.py
+      - workspace/target/src/infrastructure/scheduler/alert_scheduler.py
+      - workspace/target/src/infrastructure/scheduler/auto_import.py
+      - workspace/target/src/infrastructure/scheduler/runners.py
+    test_paths:
+      - workspace/target/tests/unit/infrastructure/test_cielo_agiliza_parser.py
+      - workspace/target/tests/unit/infrastructure/test_cielo_conciliator_client.py
+      - workspace/target/tests/unit/infrastructure/test_cielo_edi_parser.py
+      - workspace/target/tests/unit/infrastructure/test_rede_edi_parser.py
+      - workspace/target/tests/unit/infrastructure/test_rede_eefi_parser.py
+      - workspace/target/tests/unit/infrastructure/test_rede_torc_parser.py
+      - workspace/target/tests/unit/parsers/test_rede_edi_parser_positional.py
+      - workspace/target/tests/unit/test_rede_api_client.py
+      - workspace/target/tests/unit/test_rede_api_parser.py
+      - workspace/target/tests/unit/test_auto_import_alert.py
+      - workspace/target/tests/unit/use_cases/test_import_cielo_report.py
+      - workspace/target/tests/integration/test_acquirer_clients.py
+      - workspace/target/tests/integration/test_cielo_integration.py
+      - workspace/target/tests/integration/test_rede_edi_upload.py
+      - workspace/target/tests/utils/rede_edi_sample.py
+    business_rules:
+      - business/rules/acquirer-integration.yaml
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: docs/business/user-stories.yaml
+      section: epics[0] EPIC-1 — Integração com Adquirentes
+  - id: CAP-RECONCILIATION
+    name: Reconciliação automática
+    status: implemented
+    owners:
+      business_owner: pending_judgment
+      technical_owner: pending_judgment
+    risk_level: pending_judgment
+    source_paths:
+      - workspace/target/conciliaai-frontend/src/pages/BankReconciliation/BankReconciliationUpload.tsx
+      - workspace/target/conciliaai-frontend/src/pages/Reconciliation/BankReconciliation.tsx
+      - workspace/target/conciliaai-frontend/src/pages/Reconciliation/Reconciliation.tsx
+      - workspace/target/src/api/v1/routes/bank_reconciliation.py
+      - workspace/target/src/api/v1/routes/matches.py
+      - workspace/target/src/api/v1/routes/reconciliation.py
+      - workspace/target/src/api/v1/routes/reconciliation_jobs.py
+      - workspace/target/src/api/v1/routes/reconciliation_rules.py
+      - workspace/target/src/application/interfaces/__init__.py
+      - workspace/target/src/application/interfaces/matching_strategy.py
+      - workspace/target/src/application/services/decision_table.py
+      - workspace/target/src/application/services/matching_service.py
+      - workspace/target/src/application/services/reconciliation_job_service.py
+      - workspace/target/src/application/strategies/__init__.py
+      - workspace/target/src/application/strategies/base_matcher.py
+      - workspace/target/src/application/strategies/exact_matcher.py
+      - workspace/target/src/application/strategies/fuzzy_matcher.py
+      - workspace/target/src/application/strategies/installment_matcher.py
+      - workspace/target/src/application/strategies/ml_matcher.py
+      - workspace/target/src/application/use_cases/__init__.py
+      - workspace/target/src/application/use_cases/auto_bank_reconciliation.py
+      - workspace/target/src/application/use_cases/bank_reconciliation/__init__.py
+      - workspace/target/src/application/use_cases/bank_reconciliation/reconcile_bank_statement.py
+      - workspace/target/src/application/use_cases/interfaces.py
+      - workspace/target/src/application/use_cases/reconcile_transactions.py
+      - workspace/target/src/infrastructure/bank/__init__.py
+      - workspace/target/src/infrastructure/bank/ofx_parser.py
+    test_paths:
+      - workspace/target/tests/unit/test_exact_matcher.py
+      - workspace/target/tests/unit/test_fuzzy_matcher.py
+      - workspace/target/tests/unit/test_auto_bank_reconciliation.py
+      - workspace/target/tests/unit/infrastructure/test_ofx_parser.py
+      - workspace/target/tests/unit/use_cases/test_reconcile_bank_statement.py
+      - workspace/target/tests/integration/test_reconciliation_flow.py
+      - workspace/target/tests/e2e/test_reconciliation_flow_e2e.py
+      - workspace/target/tests/acceptance/reconciliation.feature
+    business_rules:
+      - business/rules/reconciliation.yaml
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: docs/business/user-stories.yaml
+      section: epics[1] EPIC-2 — Reconciliação Automática
+  - id: CAP-ANOMALY-DETECTION
+    name: Detecção de anomalias
+    status: implemented
+    owners:
+      business_owner: pending_judgment
+      technical_owner: pending_judgment
+    risk_level: pending_judgment
+    source_paths:
+      - workspace/target/conciliaai-frontend/src/pages/Alerts/AlertsPage.tsx
+      - workspace/target/conciliaai-frontend/src/pages/Divergences/Divergences.tsx
+      - workspace/target/src/api/v1/routes/alerts.py
+      - workspace/target/src/api/v1/routes/divergences.py
+      - workspace/target/src/application/services/alert_service.py
+      - workspace/target/src/application/services/anomaly_detection_service.py
+      - workspace/target/src/infrastructure/alerts/__init__.py
+      - workspace/target/src/infrastructure/alerts/alert_engine.py
+    test_paths:
+      - workspace/target/tests/unit/test_anomaly_detection_service.py
+    business_rules:
+      - business/rules/anomaly-detection.yaml
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: docs/business/user-stories.yaml
+      section: epics[2] EPIC-3 — Detecção de Anomalias
+  - id: CAP-DASHBOARD-NOTIFICATIONS
+    name: Dashboard e notificações
+    status: implemented
+    owners:
+      business_owner: pending_judgment
+      technical_owner: pending_judgment
+    risk_level: pending_judgment
+    source_paths:
+      - workspace/target/conciliaai-frontend/src/App.tsx
+      - workspace/target/conciliaai-frontend/src/api/auth.api.ts
+      - workspace/target/conciliaai-frontend/src/api/axios-config.ts
+      - workspace/target/conciliaai-frontend/src/api/divergences.api.ts
+      - workspace/target/conciliaai-frontend/src/api/reconciliation.api.ts
+      - workspace/target/conciliaai-frontend/src/api/reports.api.ts
+      - workspace/target/conciliaai-frontend/src/api/sales.api.ts
+      - workspace/target/conciliaai-frontend/src/api/stats.api.ts
+      - workspace/target/conciliaai-frontend/src/api/transactions.api.ts
+      - workspace/target/conciliaai-frontend/src/components/__tests__/AccuracyTrendChart.test.tsx
+      - workspace/target/conciliaai-frontend/src/components/charts/AccuracyTrendChart.tsx
+      - workspace/target/conciliaai-frontend/src/components/charts/AcquirerBarChart.tsx
+      - workspace/target/conciliaai-frontend/src/components/charts/DivergencesPieChart.tsx
+      - workspace/target/conciliaai-frontend/src/components/common/ConfirmDialog/ConfirmDialog.tsx
+      - workspace/target/conciliaai-frontend/src/components/common/DataTable/DataTable.tsx
+      - workspace/target/conciliaai-frontend/src/components/common/Snackbar/NotificationSnackbar.tsx
+      - workspace/target/conciliaai-frontend/src/components/features/DivergenceCard.tsx
+      - workspace/target/conciliaai-frontend/src/components/features/ImportCSVDialog.tsx
+      - workspace/target/conciliaai-frontend/src/components/features/PDFExport.tsx
+      - workspace/target/conciliaai-frontend/src/components/features/SaleFormDialog.tsx
+      - workspace/target/conciliaai-frontend/src/components/features/TransactionDetail.tsx
+      - workspace/target/conciliaai-frontend/src/components/features/__tests__/PDFExport.test.tsx
+      - workspace/target/conciliaai-frontend/src/components/features/notifications/NotificationCenter.tsx
+      - workspace/target/conciliaai-frontend/src/components/layout/AppBar/AppBar.tsx
+      - workspace/target/conciliaai-frontend/src/components/layout/AppLayout.tsx
+      - workspace/target/conciliaai-frontend/src/components/layout/Sidebar/Sidebar.tsx
+      - workspace/target/conciliaai-frontend/src/components/scope/AcquirerScopeBar.tsx
+      - workspace/target/conciliaai-frontend/src/components/scope/BreakdownStrip.tsx
+      - workspace/target/conciliaai-frontend/src/components/scope/FocusBanner.tsx
+      - workspace/target/conciliaai-frontend/src/hooks/__tests__/useExport.test.tsx
+      - workspace/target/conciliaai-frontend/src/hooks/__tests__/useSales.test.tsx
+      - workspace/target/conciliaai-frontend/src/hooks/useDivergences.ts
+      - workspace/target/conciliaai-frontend/src/hooks/useExport.ts
+      - workspace/target/conciliaai-frontend/src/hooks/useNotifications.ts
+      - workspace/target/conciliaai-frontend/src/hooks/useReconciliationJob.ts
+      - workspace/target/conciliaai-frontend/src/hooks/useReports.ts
+      - workspace/target/conciliaai-frontend/src/hooks/useSales.ts
+      - workspace/target/conciliaai-frontend/src/hooks/useStats.ts
+      - workspace/target/conciliaai-frontend/src/hooks/useTransactions.ts
+      - workspace/target/conciliaai-frontend/src/index.css
+      - workspace/target/conciliaai-frontend/src/main.tsx
+      - workspace/target/conciliaai-frontend/src/pages/Dashboard/Dashboard.tsx
+      - workspace/target/conciliaai-frontend/src/pages/Notifications/NotificationsPage.tsx
+      - workspace/target/conciliaai-frontend/src/pages/Reports/CashflowDashboard.tsx
+      - workspace/target/conciliaai-frontend/src/pages/Reports/Reports.tsx
+      - workspace/target/conciliaai-frontend/src/pages/Sales/Sales.tsx
+      - workspace/target/conciliaai-frontend/src/pages/Transactions/Transactions.tsx
+      - workspace/target/conciliaai-frontend/src/services/api.ts
+      - workspace/target/conciliaai-frontend/src/services/types.ts
+      - workspace/target/conciliaai-frontend/src/store/auth.store.ts
+      - workspace/target/conciliaai-frontend/src/store/scope.store.ts
+      - workspace/target/conciliaai-frontend/src/store/ui.store.ts
+      - workspace/target/conciliaai-frontend/src/test/setup.ts
+      - workspace/target/conciliaai-frontend/src/theme/colors.ts
+      - workspace/target/conciliaai-frontend/src/theme/theme.ts
+      - workspace/target/conciliaai-frontend/src/theme/typography.ts
+      - workspace/target/conciliaai-frontend/src/types/api.types.ts
+      - workspace/target/conciliaai-frontend/src/utils/constants.ts
+      - workspace/target/conciliaai-frontend/src/utils/formatters.ts
+      - workspace/target/conciliaai-frontend/src/utils/validators.ts
+      - workspace/target/conciliaai-frontend/src/vite-env.d.ts
+      - workspace/target/src/api/routes/notifications.py
+      - workspace/target/src/api/v1/routes/export.py
+      - workspace/target/src/api/v1/routes/health.py
+      - workspace/target/src/api/v1/routes/reports.py
+      - workspace/target/src/api/v1/routes/sales.py
+      - workspace/target/src/api/v1/routes/stats.py
+      - workspace/target/src/api/v1/routes/transactions.py
+      - workspace/target/src/application/services/export_service.py
+      - workspace/target/src/application/services/report_service.py
+      - workspace/target/src/application/services/sales_service.py
+      - workspace/target/src/application/services/transaction_service.py
+      - workspace/target/src/infrastructure/notification/__init__.py
+      - workspace/target/src/infrastructure/notification/notification_service.py
+    test_paths:
+      - workspace/target/tests/unit/test_export_service.py
+      - workspace/target/tests/unit/test_stats_dashboard_response.py
+      - workspace/target/tests/e2e/test_critical_user_journeys.py
+      - workspace/target/conciliaai-frontend/tests/unit/components/DataTable.test.tsx
+      - workspace/target/conciliaai-frontend/tests/unit/hooks/useSales.test.tsx
+      - workspace/target/conciliaai-frontend/tests/unit/hooks/useTransactions.test.tsx
+      - workspace/target/conciliaai-frontend/tests/unit/utils/formatters.test.ts
+      - workspace/target/conciliaai-frontend/tests/unit/utils/validators.test.ts
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: docs/business/user-stories.yaml
+      section: epics[3] EPIC-4 — Dashboard & Notificações
+  - id: CAP-CASH-FLOW
+    name: Previsão de fluxo de caixa
+    status: planned
+    owners:
+      business_owner: pending_judgment
+      technical_owner: pending_judgment
+    risk_level: pending_judgment
+    source_paths:
+      - workspace/target/conciliaai-frontend/src/pages/CashFlow/CashFlowDashboard.tsx
+      - workspace/target/src/api/routes/cash_flow.py
+      - workspace/target/src/application/use_cases/cash_flow/__init__.py
+      - workspace/target/src/application/use_cases/cash_flow/get_cash_flow_forecast.py
+    test_paths: []
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: docs/business/user-stories.yaml
+      section: epics[4] EPIC-5 — Previsão de Fluxo de Caixa
+  - id: CAP-ACCESS-CONTROL
+    name: Controle de acesso e isolamento por tenant
+    status: implemented
+    owners:
+      business_owner: pending_judgment
+      technical_owner: pending_judgment
+    risk_level: pending_judgment
+    source_paths:
+      - workspace/target/conciliaai-frontend/src/components/auth/ProtectedRoute.tsx
+      - workspace/target/conciliaai-frontend/src/pages/Login/Login.tsx
+      - workspace/target/conciliaai-frontend/src/pages/Settings/AutoImportSettings.tsx
+      - workspace/target/conciliaai-frontend/src/pages/Settings/Settings.tsx
+      - workspace/target/src/api/middleware/__init__.py
+      - workspace/target/src/api/middleware/audit_middleware.py
+      - workspace/target/src/api/middleware/auth_middleware.py
+      - workspace/target/src/api/middleware/jwt_context_middleware.py
+      - workspace/target/src/api/middleware/paths.py
+      - workspace/target/src/api/middleware/rate_limit_middleware.py
+      - workspace/target/src/api/middleware/tenant_middleware.py
+      - workspace/target/src/api/routes/auth.py
+      - workspace/target/src/infrastructure/repositories/__init__.py
+      - workspace/target/src/infrastructure/repositories/postgresql_user_repository.py
+      - workspace/target/src/infrastructure/security/__init__.py
+      - workspace/target/src/infrastructure/security/jti_blocklist.py
+      - workspace/target/src/infrastructure/security/jwt_handler.py
+      - workspace/target/src/infrastructure/security/login_attempt_tracker.py
+      - workspace/target/src/infrastructure/security/password_hasher.py
+      - workspace/target/src/infrastructure/security/rate_limiter.py
+      - workspace/target/src/infrastructure/security/secrets_manager.py
+    test_paths:
+      - workspace/target/tests/unit/security/test_jwt_handler.py
+      - workspace/target/tests/unit/security/test_password_hasher.py
+      - workspace/target/tests/unit/security/test_rate_limiter.py
+      - workspace/target/tests/unit/test_rbac_and_audit_middleware.py
+      - workspace/target/tests/unit/test_security_hardening.py
+      - workspace/target/tests/integration/test_auth_endpoints.py
+      - workspace/target/tests/integration/test_protected_endpoints.py
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: docs/SECURITY.md
+  - id: CAP-PLATFORM
+    name: "Plataforma: domínio, persistência e superfície HTTP"
+    status: implemented
+    owners:
+      business_owner: pending_judgment
+      technical_owner: pending_judgment
+    risk_level: pending_judgment
+    source_paths:
+      - workspace/target/src/api/__init__.py
+      - workspace/target/src/api/dependencies.py
+      - workspace/target/src/api/errors.py
+      - workspace/target/src/api/gateway.py
+      - workspace/target/src/api/main.py
+      - workspace/target/src/api/routes/__init__.py
+      - workspace/target/src/api/serialization.py
+      - workspace/target/src/api/v1/__init__.py
+      - workspace/target/src/api/v1/routes/__init__.py
+      - workspace/target/src/domain/entities/__init__.py
+      - workspace/target/src/domain/entities/acquirer_transaction.py
+      - workspace/target/src/domain/entities/bank_reconciliation.py
+      - workspace/target/src/domain/entities/bank_transaction.py
+      - workspace/target/src/domain/entities/divergence.py
+      - workspace/target/src/domain/entities/import_schedule.py
+      - workspace/target/src/domain/entities/installment.py
+      - workspace/target/src/domain/entities/notification.py
+      - workspace/target/src/domain/entities/reconciliation_match.py
+      - workspace/target/src/domain/entities/sale.py
+      - workspace/target/src/domain/entities/settlement.py
+      - workspace/target/src/domain/entities/tenant.py
+      - workspace/target/src/domain/entities/user.py
+      - workspace/target/src/domain/repositories/__init__.py
+      - workspace/target/src/domain/repositories/acquirer_transaction_repository.py
+      - workspace/target/src/domain/repositories/bank_transaction_repository.py
+      - workspace/target/src/domain/repositories/import_schedule_repository.py
+      - workspace/target/src/domain/repositories/notification_repository.py
+      - workspace/target/src/domain/repositories/user_repository.py
+      - workspace/target/src/domain/value_objects/__init__.py
+      - workspace/target/src/domain/value_objects/acquirer.py
+      - workspace/target/src/domain/value_objects/authorization_code.py
+      - workspace/target/src/domain/value_objects/installment_plan.py
+      - workspace/target/src/domain/value_objects/money.py
+      - workspace/target/src/domain/value_objects/nsu.py
+      - workspace/target/src/domain/value_objects/percentage.py
+      - workspace/target/src/infrastructure/__init__.py
+      - workspace/target/src/infrastructure/cache.py
+      - workspace/target/src/infrastructure/database.py
+      - workspace/target/src/infrastructure/logging.py
+      - workspace/target/src/infrastructure/persistence/__init__.py
+      - workspace/target/src/infrastructure/persistence/database.py
+      - workspace/target/src/infrastructure/persistence/in_memory.py
+      - workspace/target/src/infrastructure/persistence/mappers.py
+      - workspace/target/src/infrastructure/persistence/models.py
+      - workspace/target/src/infrastructure/persistence/repositories/__init__.py
+      - workspace/target/src/infrastructure/persistence/repositories/acquirer_transaction_repository.py
+      - workspace/target/src/infrastructure/persistence/repositories/divergence_repository.py
+      - workspace/target/src/infrastructure/persistence/repositories/match_repository.py
+      - workspace/target/src/infrastructure/persistence/repositories/notification_repository.py
+      - workspace/target/src/infrastructure/persistence/repositories/postgresql_bank_transaction_repository.py
+      - workspace/target/src/infrastructure/persistence/repositories/postgresql_divergence_repository.py
+      - workspace/target/src/infrastructure/persistence/repositories/postgresql_import_schedule_repository.py
+      - workspace/target/src/infrastructure/persistence/repositories/postgresql_match_repository.py
+      - workspace/target/src/infrastructure/persistence/repositories/postgresql_sale_repository.py
+      - workspace/target/src/infrastructure/persistence/repositories/postgresql_settlement_repository.py
+      - workspace/target/src/infrastructure/persistence/repositories/postgresql_transaction_repository.py
+      - workspace/target/src/infrastructure/persistence/repositories/sale_repository.py
+      - workspace/target/src/infrastructure/persistence/repositories/settlement_repository.py
+      - workspace/target/src/infrastructure/persistence/repositories/transaction_repository.py
+    test_paths:
+      - workspace/target/tests/conftest.py
+      - workspace/target/tests/integration/test_postgresql_repositories.py
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: docs/ARCHITECTURE-POSTURE.md

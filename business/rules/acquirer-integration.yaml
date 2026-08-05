@@ -1,0 +1,53 @@
+# Regras de cálculo de MDR do ALVO, derivadas na fase ING-04-NEGOCIO.
+#
+# Declaradas pelo alvo em docs/business/business-rules.yaml, categoria "MDR Calculation",
+# ids BR-010 a BR-014. As taxas abaixo são as que o alvo documenta; elas são o esperado contra o
+# qual a detecção de divergência de MDR compara, o que torna cada número aqui uma régua e não
+# uma anotação — se a adquirente mudar a taxa e este arquivo não mudar, o alerta passa a acusar
+# divergência onde não há.
+#
+# source_of_truth: false — documento derivado.
+# Schema: harness/schemas/business-rules.schema.json
+schema_version: "1.0"
+metadata_version: "1.0"
+source_of_truth: false
+generated_from: "harness/pipeline/ingest.yaml:ING-04-NEGOCIO"
+
+capability: CAP-ACQUIRER-INTEGRATION
+
+rules:
+  - id: RULE-MDR-001
+    name: "Cielo — débito"
+    status: implemented
+    statement: "MDR de débito na Cielo é 2,5% do valor da transação."
+    rationale: "BR-010 em docs/business/business-rules.yaml: mdr_amount = amount * 0.025."
+
+  - id: RULE-MDR-002
+    name: "Cielo — crédito à vista"
+    status: implemented
+    statement: "MDR de crédito à vista na Cielo é 3,0% do valor da transação."
+    rationale: "BR-011 em docs/business/business-rules.yaml: mdr_amount = amount * 0.030."
+
+  - id: RULE-MDR-003
+    name: "Cielo — crédito parcelado"
+    status: implemented
+    statement: >
+      MDR de crédito parcelado na Cielo cresce com o número de parcelas: até 6 parcelas a taxa é
+      3,5% mais 0,2 ponto percentual por parcela adicional; acima de 6, é 4,5% mais 0,3 ponto por
+      parcela além da sexta.
+    rationale: "BR-012 em docs/business/business-rules.yaml, com a fórmula condicional completa."
+
+  - id: RULE-MDR-004
+    name: "Rede — débito"
+    status: implemented
+    statement: "MDR de débito na Rede é 2,3% do valor da transação."
+    rationale: "BR-013 em docs/business/business-rules.yaml: mdr_amount = amount * 0.023."
+
+  - id: RULE-MDR-005
+    name: "Stone — taxas progressivas por volume"
+    status: implemented
+    statement: "A taxa da Stone depende da faixa de volume transacionado no mês."
+    rationale: >
+      BR-014 em docs/business/business-rules.yaml. É a única das cinco cuja régua não é um número
+      fixo: depende de estado acumulado do período, o que a torna a mais frágil a drift silencioso
+      entre o que a adquirente aplica e o que este metadado afirma.

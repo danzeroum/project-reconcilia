@@ -1,22 +1,908 @@
-# Componentes técnicos ligados a capacidades. Fecha a rastreabilidade
-# capacidade → componente → código → teste.
-# Schema: harness/schemas/components.schema.json
+# Componentes técnicos do ALVO, derivados na fase ING-03-CARTOGRAFIA.
 #
-# VAZIA POR ORA (CP-000). É a coleção sobre a qual a invariante do código órfão se apoia: todo
-# arquivo sob project.yaml:target.code_roots pertence a um componente ou a uma isenção declarada.
-# Enquanto o alvo não foi cartografado (ING-03-CARTOGRAFIA), não há componente a declarar — e é
-# por isso que o inventário exige workspace/target materializado em vez de sair verde por
-# percorrer conjunto vazio.
+# A fronteira de componente é julgamento de domínio, não dedução — e por isso errei para o
+# lado de componentes MENORES: fundir dois depois é um diff, separar um depois desfaz
+# rastreabilidade já declarada. A atribuição arquivo→componente é exaustiva por construção:
+# todo arquivo sob target.code_roots pertence a exatamente um componente ou a uma isenção
+# declarada abaixo, e é isso que a invariante do código órfão confere.
+#
+# source_of_truth: false — documento derivado. owner sai pending_judgment: quem é dono de um
+# componente do alvo é decisão de gente, não dedução de quem leu o diretório.
+# Schema: harness/schemas/components.schema.json
 schema_version: "1.0"
 metadata_version: "1.0"
-source_of_truth: true
-generated_from: null
+source_of_truth: false
+generated_from: "harness/pipeline/ingest.yaml:ING-03-CARTOGRAFIA"
 
-components: []
+components:
+  - id: CMP-ACQUIRER-ADAPTERS
+    kind: adapter
+    capability: CAP-ACQUIRER-INTEGRATION
+    status: implemented
+    source_paths:
+      - workspace/target/src/infrastructure/acquirers/__init__.py
+      - workspace/target/src/infrastructure/acquirers/base_parser.py
+      - workspace/target/src/infrastructure/acquirers/cielo_agiliza_parser.py
+      - workspace/target/src/infrastructure/acquirers/cielo_client.py
+      - workspace/target/src/infrastructure/acquirers/cielo_conciliator_client.py
+      - workspace/target/src/infrastructure/acquirers/cielo_edi_client.py
+      - workspace/target/src/infrastructure/acquirers/cielo_edi_parser.py
+      - workspace/target/src/infrastructure/acquirers/rede_api_parser.py
+      - workspace/target/src/infrastructure/acquirers/rede_client.py
+      - workspace/target/src/infrastructure/acquirers/rede_edi_client.py
+      - workspace/target/src/infrastructure/acquirers/rede_edi_parser.py
+      - workspace/target/src/infrastructure/acquirers/rede_eefi_parser.py
+      - workspace/target/src/infrastructure/acquirers/rede_torc_parser.py
+      - workspace/target/src/infrastructure/acquirers/registry.py
+      - workspace/target/src/infrastructure/acquirers/stone_api_client.py
+      - workspace/target/src/infrastructure/acquirers/stone_parser.py
+    depends_on:
+      - CMP-DOMAIN-ENTITIES
+      - CMP-DOMAIN-VALUES
+      - CMP-INFRA-CORE
+    implements:
+      - REQ-001
+      - REQ-002
+      - REQ-003
+    exposes:
+      - src.infrastructure.acquirers.registry.get_parser_class
+      - src.infrastructure.acquirers.registry.list_acquirers
+    tested_by:
+      - workspace/target/tests/unit/infrastructure/test_cielo_conciliator_client.py
+      - workspace/target/tests/unit/test_rede_api_client.py
+      - workspace/target/tests/integration/test_acquirer_clients.py
+    owner: pending_judgment
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: src/infrastructure/acquirers/registry.py
+  - id: CMP-ACQUIRER-PARSERS
+    kind: adapter
+    capability: CAP-ACQUIRER-INTEGRATION
+    status: implemented
+    source_paths:
+      - workspace/target/src/infrastructure/parsers/__init__.py
+      - workspace/target/src/infrastructure/parsers/base_parser.py
+      - workspace/target/src/infrastructure/parsers/rede_edi_parser.py
+      - workspace/target/src/infrastructure/parsers/rede_layouts.py
+    depends_on:
+      - CMP-DOMAIN-ENTITIES
+      - CMP-DOMAIN-VALUES
+    implements:
+      - REQ-002
+    tested_by:
+      - workspace/target/tests/unit/parsers/test_rede_edi_parser_positional.py
+      - workspace/target/tests/unit/infrastructure/test_rede_edi_parser.py
+    owner: pending_judgment
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: src/infrastructure/parsers/base_parser.py
+  - id: CMP-CIELO-CONCILIATOR
+    kind: service
+    capability: CAP-ACQUIRER-INTEGRATION
+    status: implemented
+    source_paths:
+      - workspace/target/src/application/use_cases/cielo_conciliator/__init__.py
+      - workspace/target/src/application/use_cases/cielo_conciliator/import_cielo_report.py
+    depends_on:
+      - CMP-ACQUIRER-ADAPTERS
+      - CMP-DOMAIN-ENTITIES
+      - CMP-PERSISTENCE
+      - CMP-RECONCILIATION-USECASES
+    implements:
+      - REQ-001
+    tested_by:
+      - workspace/target/tests/unit/use_cases/test_import_cielo_report.py
+      - workspace/target/tests/integration/test_cielo_integration.py
+    owner: pending_judgment
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: src/application/use_cases/cielo_conciliator
+  - id: CMP-INGESTION
+    kind: service
+    capability: CAP-ACQUIRER-INTEGRATION
+    status: implemented
+    source_paths:
+      - workspace/target/src/application/services/auto_import_service.py
+      - workspace/target/src/application/services/ingestion_service.py
+      - workspace/target/src/infrastructure/scheduler/__init__.py
+      - workspace/target/src/infrastructure/scheduler/alert_scheduler.py
+      - workspace/target/src/infrastructure/scheduler/auto_import.py
+      - workspace/target/src/infrastructure/scheduler/runners.py
+    depends_on:
+      - CMP-ACQUIRER-ADAPTERS
+      - CMP-ALERTS
+      - CMP-DOMAIN-ENTITIES
+      - CMP-DOMAIN-PORTS
+      - CMP-DOMAIN-VALUES
+      - CMP-INFRA-CORE
+      - CMP-PERSISTENCE
+    implements:
+      - REQ-001
+      - REQ-006
+    tested_by:
+      - workspace/target/tests/unit/test_auto_import_alert.py
+      - workspace/target/tests/integration/test_rede_edi_upload.py
+    owner: pending_judgment
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: src/application/services/ingestion_service.py
+  - id: CMP-INGESTION-API
+    kind: adapter
+    capability: CAP-ACQUIRER-INTEGRATION
+    status: implemented
+    source_paths:
+      - workspace/target/src/api/v1/routes/acquirers.py
+      - workspace/target/src/api/v1/routes/auto_import.py
+      - workspace/target/src/api/v1/routes/cielo_conciliator.py
+      - workspace/target/src/api/v1/routes/ingestion.py
+    depends_on:
+      - CMP-ACQUIRER-ADAPTERS
+      - CMP-API-CORE
+      - CMP-CIELO-CONCILIATOR
+      - CMP-DOMAIN-ENTITIES
+      - CMP-PERSISTENCE
+    implements:
+      - REQ-005
+    tested_by: []
+    owner: pending_judgment
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: docs/API-REFERENCE.md
+  - id: CMP-MATCHING-ENGINE
+    kind: domain-module
+    capability: CAP-RECONCILIATION
+    status: implemented
+    source_paths:
+      - workspace/target/src/application/interfaces/__init__.py
+      - workspace/target/src/application/interfaces/matching_strategy.py
+      - workspace/target/src/application/services/matching_service.py
+      - workspace/target/src/application/strategies/__init__.py
+      - workspace/target/src/application/strategies/base_matcher.py
+      - workspace/target/src/application/strategies/exact_matcher.py
+      - workspace/target/src/application/strategies/fuzzy_matcher.py
+      - workspace/target/src/application/strategies/installment_matcher.py
+      - workspace/target/src/application/strategies/ml_matcher.py
+    depends_on:
+      - CMP-DOMAIN-ENTITIES
+      - CMP-DOMAIN-VALUES
+    exposes:
+      - src.application.interfaces.matching_strategy.MatchingStrategy
+      - src.application.services.matching_service.MatchingService
+    tested_by:
+      - workspace/target/tests/unit/test_exact_matcher.py
+      - workspace/target/tests/unit/test_fuzzy_matcher.py
+    owner: pending_judgment
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: src/application/strategies
+  - id: CMP-DECISION-TABLE
+    kind: service
+    capability: CAP-RECONCILIATION
+    status: implemented
+    source_paths:
+      - workspace/target/src/application/services/decision_table.py
+    implements:
+      - REQ-007
+    exposes:
+      - src.application.services.decision_table.ReconciliationPolicy
+      - src.application.services.decision_table.load_policy
+    tested_by: []
+    owner: pending_judgment
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: src/application/services/decision_table.py
+  - id: CMP-BANK-OFX
+    kind: adapter
+    capability: CAP-RECONCILIATION
+    status: implemented
+    source_paths:
+      - workspace/target/src/infrastructure/bank/__init__.py
+      - workspace/target/src/infrastructure/bank/ofx_parser.py
+    depends_on:
+      - CMP-INFRA-CORE
+    tested_by:
+      - workspace/target/tests/unit/infrastructure/test_ofx_parser.py
+    owner: pending_judgment
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: src/infrastructure/bank/ofx_parser.py
+  - id: CMP-RECONCILIATION-JOBS
+    kind: service
+    capability: CAP-RECONCILIATION
+    status: implemented
+    source_paths:
+      - workspace/target/src/application/services/reconciliation_job_service.py
+    depends_on:
+      - CMP-PERSISTENCE
+    implements:
+      - REQ-007
+    tested_by: []
+    owner: pending_judgment
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: src/application/services/reconciliation_job_service.py
+  - id: CMP-RECONCILIATION-USECASES
+    kind: domain-module
+    capability: CAP-RECONCILIATION
+    status: implemented
+    source_paths:
+      - workspace/target/src/application/use_cases/__init__.py
+      - workspace/target/src/application/use_cases/auto_bank_reconciliation.py
+      - workspace/target/src/application/use_cases/bank_reconciliation/__init__.py
+      - workspace/target/src/application/use_cases/bank_reconciliation/reconcile_bank_statement.py
+      - workspace/target/src/application/use_cases/interfaces.py
+      - workspace/target/src/application/use_cases/reconcile_transactions.py
+    depends_on:
+      - CMP-BANK-OFX
+      - CMP-DECISION-TABLE
+      - CMP-DOMAIN-ENTITIES
+      - CMP-DOMAIN-PORTS
+      - CMP-MATCHING-ENGINE
+      - CMP-PERSISTENCE
+    implements:
+      - REQ-007
+    tested_by:
+      - workspace/target/tests/unit/test_auto_bank_reconciliation.py
+      - workspace/target/tests/unit/use_cases/test_reconcile_bank_statement.py
+      - workspace/target/tests/integration/test_reconciliation_flow.py
+    owner: pending_judgment
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: src/application/use_cases
+  - id: CMP-RECONCILIATION-API
+    kind: adapter
+    capability: CAP-RECONCILIATION
+    status: implemented
+    source_paths:
+      - workspace/target/src/api/v1/routes/bank_reconciliation.py
+      - workspace/target/src/api/v1/routes/matches.py
+      - workspace/target/src/api/v1/routes/reconciliation.py
+      - workspace/target/src/api/v1/routes/reconciliation_jobs.py
+      - workspace/target/src/api/v1/routes/reconciliation_rules.py
+    depends_on:
+      - CMP-API-CORE
+      - CMP-DECISION-TABLE
+      - CMP-DOMAIN-ENTITIES
+      - CMP-PERSISTENCE
+      - CMP-RECONCILIATION-JOBS
+      - CMP-RECONCILIATION-USECASES
+    implements:
+      - REQ-007
+      - REQ-008
+    tested_by: []
+    owner: pending_judgment
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: docs/API-REFERENCE.md
+  - id: CMP-ANOMALY
+    kind: service
+    capability: CAP-ANOMALY-DETECTION
+    status: implemented
+    source_paths:
+      - workspace/target/src/application/services/anomaly_detection_service.py
+    depends_on:
+      - CMP-DOMAIN-ENTITIES
+      - CMP-DOMAIN-VALUES
+    tested_by:
+      - workspace/target/tests/unit/test_anomaly_detection_service.py
+    owner: pending_judgment
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: src/application/services/anomaly_detection_service.py
+  - id: CMP-ALERTS
+    kind: service
+    capability: CAP-ANOMALY-DETECTION
+    status: implemented
+    source_paths:
+      - workspace/target/src/application/services/alert_service.py
+      - workspace/target/src/infrastructure/alerts/__init__.py
+      - workspace/target/src/infrastructure/alerts/alert_engine.py
+    depends_on:
+      - CMP-DOMAIN-ENTITIES
+      - CMP-DOMAIN-PORTS
+      - CMP-DOMAIN-VALUES
+      - CMP-INFRA-CORE
+      - CMP-NOTIFICATION
+      - CMP-PERSISTENCE
+    implements:
+      - REQ-011
+    tested_by: []
+    owner: pending_judgment
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: src/infrastructure/alerts/alert_engine.py
+  - id: CMP-DIVERGENCE-API
+    kind: adapter
+    capability: CAP-ANOMALY-DETECTION
+    status: implemented
+    source_paths:
+      - workspace/target/src/api/v1/routes/alerts.py
+      - workspace/target/src/api/v1/routes/divergences.py
+    depends_on:
+      - CMP-ALERTS
+      - CMP-API-CORE
+      - CMP-DOMAIN-ENTITIES
+      - CMP-PERSISTENCE
+    implements:
+      - REQ-011
+      - REQ-012
+      - REQ-013
+      - REQ-014
+    tested_by: []
+    owner: pending_judgment
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: docs/API-REFERENCE.md
+  - id: CMP-CASH-FLOW
+    kind: domain-module
+    capability: CAP-CASH-FLOW
+    status: implemented
+    source_paths:
+      - workspace/target/src/api/routes/cash_flow.py
+      - workspace/target/src/application/use_cases/cash_flow/__init__.py
+      - workspace/target/src/application/use_cases/cash_flow/get_cash_flow_forecast.py
+    depends_on:
+      - CMP-API-CORE
+      - CMP-DOMAIN-ENTITIES
+      - CMP-DOMAIN-PORTS
+      - CMP-PERSISTENCE
+      - CMP-RECONCILIATION-USECASES
+    implements:
+      - REQ-019
+    tested_by: []
+    owner: pending_judgment
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: src/application/use_cases/cash_flow
+  - id: CMP-SECURITY
+    kind: service
+    capability: CAP-ACCESS-CONTROL
+    status: implemented
+    source_paths:
+      - workspace/target/src/infrastructure/security/__init__.py
+      - workspace/target/src/infrastructure/security/jti_blocklist.py
+      - workspace/target/src/infrastructure/security/jwt_handler.py
+      - workspace/target/src/infrastructure/security/login_attempt_tracker.py
+      - workspace/target/src/infrastructure/security/password_hasher.py
+      - workspace/target/src/infrastructure/security/rate_limiter.py
+      - workspace/target/src/infrastructure/security/secrets_manager.py
+    depends_on:
+      - CMP-INFRA-CORE
+    tested_by:
+      - workspace/target/tests/unit/security/test_jwt_handler.py
+      - workspace/target/tests/unit/security/test_password_hasher.py
+      - workspace/target/tests/unit/security/test_rate_limiter.py
+      - workspace/target/tests/unit/test_security_hardening.py
+    owner: pending_judgment
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: docs/SECURITY.md
+  - id: CMP-HTTP-MIDDLEWARE
+    kind: adapter
+    capability: CAP-ACCESS-CONTROL
+    status: implemented
+    source_paths:
+      - workspace/target/src/api/middleware/__init__.py
+      - workspace/target/src/api/middleware/audit_middleware.py
+      - workspace/target/src/api/middleware/auth_middleware.py
+      - workspace/target/src/api/middleware/jwt_context_middleware.py
+      - workspace/target/src/api/middleware/paths.py
+      - workspace/target/src/api/middleware/rate_limit_middleware.py
+      - workspace/target/src/api/middleware/tenant_middleware.py
+    depends_on:
+      - CMP-API-CORE
+      - CMP-PERSISTENCE
+      - CMP-SECURITY
+    tested_by:
+      - workspace/target/tests/unit/test_rbac_and_audit_middleware.py
+    owner: pending_judgment
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: src/api/middleware
+  - id: CMP-AUTH-API
+    kind: adapter
+    capability: CAP-ACCESS-CONTROL
+    status: implemented
+    source_paths:
+      - workspace/target/src/api/routes/auth.py
+    depends_on:
+      - CMP-API-CORE
+      - CMP-SECURITY
+      - CMP-USER-PERSISTENCE
+    tested_by:
+      - workspace/target/tests/integration/test_auth_endpoints.py
+      - workspace/target/tests/integration/test_protected_endpoints.py
+    owner: pending_judgment
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: docs/API-REFERENCE.md
+  - id: CMP-USER-PERSISTENCE
+    kind: adapter
+    capability: CAP-ACCESS-CONTROL
+    status: implemented
+    source_paths:
+      - workspace/target/src/infrastructure/repositories/__init__.py
+      - workspace/target/src/infrastructure/repositories/postgresql_user_repository.py
+    depends_on:
+      - CMP-DOMAIN-ENTITIES
+      - CMP-DOMAIN-PORTS
+      - CMP-INFRA-CORE
+      - CMP-PERSISTENCE
+    tested_by: []
+    owner: pending_judgment
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: src/infrastructure/repositories
+  - id: CMP-REPORTING
+    kind: service
+    capability: CAP-DASHBOARD-NOTIFICATIONS
+    status: implemented
+    source_paths:
+      - workspace/target/src/application/services/export_service.py
+      - workspace/target/src/application/services/report_service.py
+    depends_on:
+      - CMP-DOMAIN-ENTITIES
+      - CMP-PERSISTENCE
+    tested_by:
+      - workspace/target/tests/unit/test_export_service.py
+    owner: pending_judgment
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: src/application/services/report_service.py
+  - id: CMP-SALES
+    kind: service
+    capability: CAP-DASHBOARD-NOTIFICATIONS
+    status: implemented
+    source_paths:
+      - workspace/target/src/application/services/sales_service.py
+    depends_on:
+      - CMP-DOMAIN-ENTITIES
+      - CMP-DOMAIN-VALUES
+      - CMP-PERSISTENCE
+    tested_by: []
+    owner: pending_judgment
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: src/application/services/sales_service.py
+  - id: CMP-TRANSACTIONS
+    kind: service
+    capability: CAP-DASHBOARD-NOTIFICATIONS
+    status: implemented
+    source_paths:
+      - workspace/target/src/application/services/transaction_service.py
+    depends_on:
+      - CMP-ACQUIRER-PARSERS
+      - CMP-DOMAIN-ENTITIES
+      - CMP-DOMAIN-VALUES
+      - CMP-PERSISTENCE
+    tested_by: []
+    owner: pending_judgment
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: src/application/services/transaction_service.py
+  - id: CMP-NOTIFICATION
+    kind: adapter
+    capability: CAP-DASHBOARD-NOTIFICATIONS
+    status: implemented
+    source_paths:
+      - workspace/target/src/infrastructure/notification/__init__.py
+      - workspace/target/src/infrastructure/notification/notification_service.py
+    depends_on:
+      - CMP-DOMAIN-ENTITIES
+      - CMP-DOMAIN-PORTS
+      - CMP-INFRA-CORE
+    implements:
+      - REQ-017
+    tested_by: []
+    owner: pending_judgment
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: src/infrastructure/notification/notification_service.py
+  - id: CMP-DASHBOARD-API
+    kind: adapter
+    capability: CAP-DASHBOARD-NOTIFICATIONS
+    status: implemented
+    source_paths:
+      - workspace/target/src/api/routes/notifications.py
+      - workspace/target/src/api/v1/routes/export.py
+      - workspace/target/src/api/v1/routes/health.py
+      - workspace/target/src/api/v1/routes/reports.py
+      - workspace/target/src/api/v1/routes/sales.py
+      - workspace/target/src/api/v1/routes/stats.py
+      - workspace/target/src/api/v1/routes/transactions.py
+    depends_on:
+      - CMP-API-CORE
+      - CMP-DOMAIN-ENTITIES
+      - CMP-PERSISTENCE
+      - CMP-REPORTING
+      - CMP-SALES
+      - CMP-TRANSACTIONS
+    implements:
+      - REQ-015
+    tested_by:
+      - workspace/target/tests/unit/test_stats_dashboard_response.py
+    owner: pending_judgment
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: docs/API-REFERENCE.md
+  - id: CMP-DOMAIN-ENTITIES
+    kind: domain-module
+    capability: CAP-PLATFORM
+    status: implemented
+    source_paths:
+      - workspace/target/src/domain/entities/__init__.py
+      - workspace/target/src/domain/entities/acquirer_transaction.py
+      - workspace/target/src/domain/entities/bank_reconciliation.py
+      - workspace/target/src/domain/entities/bank_transaction.py
+      - workspace/target/src/domain/entities/divergence.py
+      - workspace/target/src/domain/entities/import_schedule.py
+      - workspace/target/src/domain/entities/installment.py
+      - workspace/target/src/domain/entities/notification.py
+      - workspace/target/src/domain/entities/reconciliation_match.py
+      - workspace/target/src/domain/entities/sale.py
+      - workspace/target/src/domain/entities/settlement.py
+      - workspace/target/src/domain/entities/tenant.py
+      - workspace/target/src/domain/entities/user.py
+    depends_on:
+      - CMP-DOMAIN-VALUES
+    tested_by: []
+    owner: pending_judgment
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: docs/business/domain-model.yaml
+  - id: CMP-DOMAIN-VALUES
+    kind: domain-module
+    capability: CAP-PLATFORM
+    status: implemented
+    source_paths:
+      - workspace/target/src/domain/value_objects/__init__.py
+      - workspace/target/src/domain/value_objects/acquirer.py
+      - workspace/target/src/domain/value_objects/authorization_code.py
+      - workspace/target/src/domain/value_objects/installment_plan.py
+      - workspace/target/src/domain/value_objects/money.py
+      - workspace/target/src/domain/value_objects/nsu.py
+      - workspace/target/src/domain/value_objects/percentage.py
+    tested_by: []
+    owner: pending_judgment
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: docs/business/domain-model.yaml
+  - id: CMP-DOMAIN-PORTS
+    kind: port
+    capability: CAP-PLATFORM
+    status: implemented
+    source_paths:
+      - workspace/target/src/domain/repositories/__init__.py
+      - workspace/target/src/domain/repositories/acquirer_transaction_repository.py
+      - workspace/target/src/domain/repositories/bank_transaction_repository.py
+      - workspace/target/src/domain/repositories/import_schedule_repository.py
+      - workspace/target/src/domain/repositories/notification_repository.py
+      - workspace/target/src/domain/repositories/user_repository.py
+    depends_on:
+      - CMP-DOMAIN-ENTITIES
+    exposes:
+      - src.domain.repositories.acquirer_transaction_repository.IAcquirerTransactionRepository
+    tested_by: []
+    owner: pending_judgment
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: src/domain/repositories
+  - id: CMP-PERSISTENCE
+    kind: adapter
+    capability: CAP-PLATFORM
+    status: implemented
+    source_paths:
+      - workspace/target/src/infrastructure/persistence/__init__.py
+      - workspace/target/src/infrastructure/persistence/database.py
+      - workspace/target/src/infrastructure/persistence/in_memory.py
+      - workspace/target/src/infrastructure/persistence/mappers.py
+      - workspace/target/src/infrastructure/persistence/models.py
+      - workspace/target/src/infrastructure/persistence/repositories/__init__.py
+      - workspace/target/src/infrastructure/persistence/repositories/acquirer_transaction_repository.py
+      - workspace/target/src/infrastructure/persistence/repositories/divergence_repository.py
+      - workspace/target/src/infrastructure/persistence/repositories/match_repository.py
+      - workspace/target/src/infrastructure/persistence/repositories/notification_repository.py
+      - workspace/target/src/infrastructure/persistence/repositories/postgresql_bank_transaction_repository.py
+      - workspace/target/src/infrastructure/persistence/repositories/postgresql_divergence_repository.py
+      - workspace/target/src/infrastructure/persistence/repositories/postgresql_import_schedule_repository.py
+      - workspace/target/src/infrastructure/persistence/repositories/postgresql_match_repository.py
+      - workspace/target/src/infrastructure/persistence/repositories/postgresql_sale_repository.py
+      - workspace/target/src/infrastructure/persistence/repositories/postgresql_settlement_repository.py
+      - workspace/target/src/infrastructure/persistence/repositories/postgresql_transaction_repository.py
+      - workspace/target/src/infrastructure/persistence/repositories/sale_repository.py
+      - workspace/target/src/infrastructure/persistence/repositories/settlement_repository.py
+      - workspace/target/src/infrastructure/persistence/repositories/transaction_repository.py
+    depends_on:
+      - CMP-DOMAIN-ENTITIES
+      - CMP-DOMAIN-PORTS
+      - CMP-DOMAIN-VALUES
+    tested_by:
+      - workspace/target/tests/integration/test_postgresql_repositories.py
+    owner: pending_judgment
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: src/infrastructure/persistence
+  - id: CMP-API-CORE
+    kind: adapter
+    capability: CAP-PLATFORM
+    status: implemented
+    source_paths:
+      - workspace/target/src/api/__init__.py
+      - workspace/target/src/api/dependencies.py
+      - workspace/target/src/api/errors.py
+      - workspace/target/src/api/gateway.py
+      - workspace/target/src/api/main.py
+      - workspace/target/src/api/routes/__init__.py
+      - workspace/target/src/api/serialization.py
+      - workspace/target/src/api/v1/__init__.py
+      - workspace/target/src/api/v1/routes/__init__.py
+    depends_on:
+      - CMP-ACQUIRER-ADAPTERS
+      - CMP-CIELO-CONCILIATOR
+      - CMP-DOMAIN-ENTITIES
+      - CMP-HTTP-MIDDLEWARE
+      - CMP-INFRA-CORE
+      - CMP-INGESTION
+      - CMP-MATCHING-ENGINE
+      - CMP-PERSISTENCE
+      - CMP-RECONCILIATION-JOBS
+      - CMP-RECONCILIATION-USECASES
+      - CMP-SECURITY
+      - CMP-USER-PERSISTENCE
+    tested_by: []
+    owner: pending_judgment
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: docs/ARCHITECTURE-POSTURE.md
+  - id: CMP-INFRA-CORE
+    kind: service
+    capability: CAP-PLATFORM
+    status: implemented
+    source_paths:
+      - workspace/target/src/infrastructure/__init__.py
+      - workspace/target/src/infrastructure/cache.py
+      - workspace/target/src/infrastructure/database.py
+      - workspace/target/src/infrastructure/logging.py
+    tested_by: []
+    owner: pending_judgment
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: docs/ARCHITECTURE-POSTURE.md
+  - id: CMP-UI-PAGES-RECONCILIATION
+    kind: ui-surface
+    capability: CAP-RECONCILIATION
+    status: implemented
+    source_paths:
+      - workspace/target/conciliaai-frontend/src/pages/BankReconciliation/BankReconciliationUpload.tsx
+      - workspace/target/conciliaai-frontend/src/pages/Reconciliation/BankReconciliation.tsx
+      - workspace/target/conciliaai-frontend/src/pages/Reconciliation/Reconciliation.tsx
+    implements:
+      - REQ-007
+    tested_by: []
+    owner: pending_judgment
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: docs/FRONTEND-SPECIFICATION.md
+  - id: CMP-UI-PAGES-DIVERGENCES
+    kind: ui-surface
+    capability: CAP-ANOMALY-DETECTION
+    status: implemented
+    source_paths:
+      - workspace/target/conciliaai-frontend/src/pages/Alerts/AlertsPage.tsx
+      - workspace/target/conciliaai-frontend/src/pages/Divergences/Divergences.tsx
+    implements:
+      - REQ-012
+    tested_by: []
+    owner: pending_judgment
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: docs/FRONTEND-SPECIFICATION.md
+  - id: CMP-UI-PAGES-CASH-FLOW
+    kind: ui-surface
+    capability: CAP-CASH-FLOW
+    status: implemented
+    source_paths:
+      - workspace/target/conciliaai-frontend/src/pages/CashFlow/CashFlowDashboard.tsx
+    implements:
+      - REQ-019
+    tested_by: []
+    owner: pending_judgment
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: docs/FRONTEND-SPECIFICATION.md
+  - id: CMP-UI-PAGES-ACCESS
+    kind: ui-surface
+    capability: CAP-ACCESS-CONTROL
+    status: implemented
+    source_paths:
+      - workspace/target/conciliaai-frontend/src/components/auth/ProtectedRoute.tsx
+      - workspace/target/conciliaai-frontend/src/pages/Login/Login.tsx
+      - workspace/target/conciliaai-frontend/src/pages/Settings/AutoImportSettings.tsx
+      - workspace/target/conciliaai-frontend/src/pages/Settings/Settings.tsx
+    tested_by: []
+    owner: pending_judgment
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: docs/FRONTEND-SPECIFICATION.md
+  - id: CMP-UI-PAGES-DASHBOARD
+    kind: ui-surface
+    capability: CAP-DASHBOARD-NOTIFICATIONS
+    status: implemented
+    source_paths:
+      - workspace/target/conciliaai-frontend/src/pages/Dashboard/Dashboard.tsx
+      - workspace/target/conciliaai-frontend/src/pages/Notifications/NotificationsPage.tsx
+      - workspace/target/conciliaai-frontend/src/pages/Reports/CashflowDashboard.tsx
+      - workspace/target/conciliaai-frontend/src/pages/Reports/Reports.tsx
+      - workspace/target/conciliaai-frontend/src/pages/Sales/Sales.tsx
+      - workspace/target/conciliaai-frontend/src/pages/Transactions/Transactions.tsx
+    implements:
+      - REQ-015
+    tested_by: []
+    owner: pending_judgment
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: docs/FRONTEND-SPECIFICATION.md
+  - id: CMP-UI-API-CLIENT
+    kind: adapter
+    capability: CAP-DASHBOARD-NOTIFICATIONS
+    status: implemented
+    source_paths:
+      - workspace/target/conciliaai-frontend/src/api/auth.api.ts
+      - workspace/target/conciliaai-frontend/src/api/axios-config.ts
+      - workspace/target/conciliaai-frontend/src/api/divergences.api.ts
+      - workspace/target/conciliaai-frontend/src/api/reconciliation.api.ts
+      - workspace/target/conciliaai-frontend/src/api/reports.api.ts
+      - workspace/target/conciliaai-frontend/src/api/sales.api.ts
+      - workspace/target/conciliaai-frontend/src/api/stats.api.ts
+      - workspace/target/conciliaai-frontend/src/api/transactions.api.ts
+      - workspace/target/conciliaai-frontend/src/services/api.ts
+      - workspace/target/conciliaai-frontend/src/services/types.ts
+    implements:
+      - REQ-015
+    tested_by: []
+    owner: pending_judgment
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: docs/FRONTEND-SPECIFICATION.md
+  - id: CMP-UI-HOOKS
+    kind: ui-surface
+    capability: CAP-DASHBOARD-NOTIFICATIONS
+    status: implemented
+    source_paths:
+      - workspace/target/conciliaai-frontend/src/hooks/__tests__/useExport.test.tsx
+      - workspace/target/conciliaai-frontend/src/hooks/__tests__/useSales.test.tsx
+      - workspace/target/conciliaai-frontend/src/hooks/useDivergences.ts
+      - workspace/target/conciliaai-frontend/src/hooks/useExport.ts
+      - workspace/target/conciliaai-frontend/src/hooks/useNotifications.ts
+      - workspace/target/conciliaai-frontend/src/hooks/useReconciliationJob.ts
+      - workspace/target/conciliaai-frontend/src/hooks/useReports.ts
+      - workspace/target/conciliaai-frontend/src/hooks/useSales.ts
+      - workspace/target/conciliaai-frontend/src/hooks/useStats.ts
+      - workspace/target/conciliaai-frontend/src/hooks/useTransactions.ts
+    implements:
+      - REQ-015
+    tested_by:
+      - workspace/target/conciliaai-frontend/tests/unit/hooks/useSales.test.tsx
+      - workspace/target/conciliaai-frontend/tests/unit/hooks/useTransactions.test.tsx
+    owner: pending_judgment
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: docs/FRONTEND-SPECIFICATION.md
+  - id: CMP-UI-COMPONENTS
+    kind: ui-surface
+    capability: CAP-DASHBOARD-NOTIFICATIONS
+    status: implemented
+    source_paths:
+      - workspace/target/conciliaai-frontend/src/components/__tests__/AccuracyTrendChart.test.tsx
+      - workspace/target/conciliaai-frontend/src/components/charts/AccuracyTrendChart.tsx
+      - workspace/target/conciliaai-frontend/src/components/charts/AcquirerBarChart.tsx
+      - workspace/target/conciliaai-frontend/src/components/charts/DivergencesPieChart.tsx
+      - workspace/target/conciliaai-frontend/src/components/common/ConfirmDialog/ConfirmDialog.tsx
+      - workspace/target/conciliaai-frontend/src/components/common/DataTable/DataTable.tsx
+      - workspace/target/conciliaai-frontend/src/components/common/Snackbar/NotificationSnackbar.tsx
+      - workspace/target/conciliaai-frontend/src/components/features/DivergenceCard.tsx
+      - workspace/target/conciliaai-frontend/src/components/features/ImportCSVDialog.tsx
+      - workspace/target/conciliaai-frontend/src/components/features/PDFExport.tsx
+      - workspace/target/conciliaai-frontend/src/components/features/SaleFormDialog.tsx
+      - workspace/target/conciliaai-frontend/src/components/features/TransactionDetail.tsx
+      - workspace/target/conciliaai-frontend/src/components/features/__tests__/PDFExport.test.tsx
+      - workspace/target/conciliaai-frontend/src/components/features/notifications/NotificationCenter.tsx
+      - workspace/target/conciliaai-frontend/src/components/layout/AppBar/AppBar.tsx
+      - workspace/target/conciliaai-frontend/src/components/layout/AppLayout.tsx
+      - workspace/target/conciliaai-frontend/src/components/layout/Sidebar/Sidebar.tsx
+      - workspace/target/conciliaai-frontend/src/components/scope/AcquirerScopeBar.tsx
+      - workspace/target/conciliaai-frontend/src/components/scope/BreakdownStrip.tsx
+      - workspace/target/conciliaai-frontend/src/components/scope/FocusBanner.tsx
+    implements:
+      - REQ-016
+    tested_by:
+      - workspace/target/conciliaai-frontend/tests/unit/components/DataTable.test.tsx
+    owner: pending_judgment
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: docs/FRONTEND-SPECIFICATION.md
+  - id: CMP-UI-SHELL
+    kind: ui-surface
+    capability: CAP-DASHBOARD-NOTIFICATIONS
+    status: implemented
+    source_paths:
+      - workspace/target/conciliaai-frontend/src/App.tsx
+      - workspace/target/conciliaai-frontend/src/index.css
+      - workspace/target/conciliaai-frontend/src/main.tsx
+      - workspace/target/conciliaai-frontend/src/store/auth.store.ts
+      - workspace/target/conciliaai-frontend/src/store/scope.store.ts
+      - workspace/target/conciliaai-frontend/src/store/ui.store.ts
+      - workspace/target/conciliaai-frontend/src/test/setup.ts
+      - workspace/target/conciliaai-frontend/src/theme/colors.ts
+      - workspace/target/conciliaai-frontend/src/theme/theme.ts
+      - workspace/target/conciliaai-frontend/src/theme/typography.ts
+      - workspace/target/conciliaai-frontend/src/types/api.types.ts
+      - workspace/target/conciliaai-frontend/src/utils/constants.ts
+      - workspace/target/conciliaai-frontend/src/utils/formatters.ts
+      - workspace/target/conciliaai-frontend/src/utils/validators.ts
+      - workspace/target/conciliaai-frontend/src/vite-env.d.ts
+    depends_on:
+      - CMP-UI-COMPONENTS
+      - CMP-UI-PAGES-ACCESS
+      - CMP-UI-PAGES-DASHBOARD
+      - CMP-UI-PAGES-DIVERGENCES
+      - CMP-UI-PAGES-RECONCILIATION
+    tested_by:
+      - workspace/target/conciliaai-frontend/tests/unit/utils/formatters.test.ts
+      - workspace/target/conciliaai-frontend/tests/unit/utils/validators.test.ts
+    owner: pending_judgment
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: docs/FRONTEND-SPECIFICATION.md
 
 # Arquivos sob as raízes de código que deliberadamente não pertencem a componente algum.
-# Isenção que não casa arquivo nenhum vira achado — a mesma propriedade de stages.yaml:ungoverned,
-# e é o que impede a lista de virar um lugar onde pendências dormem. Vazia aqui pela mesma razão
-# que components: a isenção do molde cobria src/project/__init__.py, que o CP-000 removeu, e
-# mantê-la seria justamente a isenção morta que o fiscal existe para acusar.
-exemptions: []
+# Isenção que não casa arquivo nenhum vira achado — é o que impede esta lista de virar um
+# lugar onde pendência dorme. Os quatro são marcadores de pacote sem lógica de negócio.
+exemptions:
+  - path: workspace/target/src/__init__.py
+    justification: "Marcador de pacote raiz: zero linhas de lógica. Atribuí-lo a um componente afirmaria uma relação de domínio que não existe."
+  - path: workspace/target/src/domain/__init__.py
+    justification: Marcador de pacote da camada de domínio, sem lógica. As três partes do domínio têm componentes próprios (entidades, objetos de valor e portas); o marcador não pertence a nenhuma delas.
+  - path: workspace/target/src/application/__init__.py
+    justification: Marcador de pacote da camada de aplicação, sem lógica. Os serviços, casos de uso e estratégias têm componentes próprios.
+  - path: workspace/target/src/application/services/__init__.py
+    justification: Marcador de pacote, sem lógica. Os onze serviços deste diretório foram distribuídos por capacidade entre sete componentes; o marcador não pertence a nenhum deles sem que a escolha seja arbitrária.

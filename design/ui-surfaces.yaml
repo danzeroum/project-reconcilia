@@ -1,14 +1,188 @@
-# Superfícies de UI ligadas a capacidades. IDs estáveis (UI-*) apontam para capacidades (CAP-*).
-# Critérios de aceite explícitos dão ao agente reviewer uma régua de experiência, não um palpite.
-# Schema: harness/schemas/ui-surfaces.schema.json
+# Superfícies de UI do ALVO, derivadas na fase ING-05-DESIGN.
 #
-# VAZIA POR ORA (CP-000): superfície aponta para capacidade, e não há capacidade ainda. O alvo
-# tem interface própria, e ela entra por ING-05-DESIGN — depois de ING-04-NEGOCIO, porque uma
-# tela declarada antes da capacidade que ela serve é exatamente a superfície órfã que ALIGN-R3
-# existe para acusar.
+# Uma por página real em conciliaai-frontend/src/pages/ — a proveniência aponta para o
+# diretório da página, e a rota é a que docs/FRONTEND-SPECIFICATION.md declara.
+#
+# OS CRITÉRIOS DE ACEITE SÃO A PARTE FRACA DESTE ARQUIVO, e é melhor dizer do que deixar
+# implícito: eles não foram lidos de nenhum documento do alvo, que descreve as telas mas não
+# as condições de aceite. São a régua de experiência mínima que o agente reviewer usa, e
+# pertencem ao julgamento humano da fase ING-07 tanto quanto risk_level pertence.
+#
+# 'satisfies' fica ausente de propósito: ligar tela a requisito exige saber qual story cada
+# página atende, e o alvo não declara esse vínculo. Inventá-lo produziria a aresta que
+# ALIGN-R3 existe para questionar.
+# Schema: harness/schemas/ui-surfaces.schema.json
 schema_version: "1.0"
 metadata_version: "1.0"
-source_of_truth: true
-generated_from: null
+source_of_truth: false
+generated_from: "harness/pipeline/ingest.yaml:ING-05-DESIGN"
 
-ui_surfaces: []
+ui_surfaces:
+  - id: UI-DASHBOARD
+    capability: CAP-DASHBOARD-NOTIFICATIONS
+    status: implemented
+    routes:
+      - /dashboard
+    primary_user_goal: "Ver a saúde da conciliação num relance: acurácia, matches e divergências pendentes."
+    acceptance_criteria:
+      - Os KPIs de acurácia, total de matches e divergências pendentes aparecem na abertura.
+      - Cada número do painel é navegável para a lista que o compõe.
+    satisfies:
+      - REQ-015
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: conciliaai-frontend/src/pages/Dashboard
+  - id: UI-RECONCILIATION
+    capability: CAP-RECONCILIATION
+    status: implemented
+    routes:
+      - /reconciliation
+    primary_user_goal: Disparar e acompanhar uma execução de conciliação.
+    acceptance_criteria:
+      - O progresso da execução é observável enquanto ela roda.
+      - O resultado distingue casado, divergente e não conciliado.
+    satisfies:
+      - REQ-007
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: conciliaai-frontend/src/pages/Reconciliation
+  - id: UI-BANK-RECONCILIATION
+    capability: CAP-RECONCILIATION
+    status: implemented
+    routes:
+      - "/bank-reconciliation"
+    primary_user_goal: Conciliar o extrato bancário contra as liquidações esperadas.
+    acceptance_criteria:
+      - O extrato é carregado por arquivo OFX.
+      - Toda linha não conciliada permanece visível em vez de ser omitida.
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: conciliaai-frontend/src/pages/BankReconciliation
+  - id: UI-DIVERGENCES
+    capability: CAP-ANOMALY-DETECTION
+    status: implemented
+    routes:
+      - /divergences
+    primary_user_goal: Ver divergências em ordem de impacto financeiro e agir sobre elas.
+    acceptance_criteria:
+      - A lista ordena por impacto, não por data.
+      - A ação de contestar está a um clique a partir da divergência.
+    satisfies:
+      - REQ-012
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: conciliaai-frontend/src/pages/Divergences
+  - id: UI-ALERTS
+    capability: CAP-ANOMALY-DETECTION
+    status: implemented
+    routes:
+      - /alerts
+    primary_user_goal: Acompanhar os alertas abertos e o que os disparou.
+    acceptance_criteria:
+      - Cada alerta identifica a regra que o originou.
+      - Alerta reconhecido sai da fila sem sumir do histórico.
+    satisfies:
+      - REQ-011
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: conciliaai-frontend/src/pages/Alerts
+  - id: UI-CASH-FLOW
+    capability: CAP-CASH-FLOW
+    status: implemented
+    routes:
+      - "/cash-flow"
+    primary_user_goal: Ver a previsão de recebimentos dos próximos dias.
+    acceptance_criteria:
+      - A projeção distingue o já liquidado do previsto.
+      - A janela de previsão é explícita na tela.
+    satisfies:
+      - REQ-019
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: conciliaai-frontend/src/pages/CashFlow
+  - id: UI-LOGIN
+    capability: CAP-ACCESS-CONTROL
+    status: implemented
+    routes:
+      - /login
+    primary_user_goal: Entrar no sistema.
+    acceptance_criteria:
+      - Erro de credencial não revela se o usuário existe.
+      - Erros de validação têm texto associado ao campo.
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: conciliaai-frontend/src/pages/Login
+  - id: UI-SETTINGS
+    capability: CAP-ACCESS-CONTROL
+    status: implemented
+    routes:
+      - /settings
+    primary_user_goal: Configurar conta, adquirentes e preferências de notificação.
+    acceptance_criteria:
+      - Toda alteração exige confirmação explícita antes de gravar.
+      - Nenhum segredo já gravado é reexibido em claro.
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: conciliaai-frontend/src/pages/Settings
+  - id: UI-SALES
+    capability: CAP-DASHBOARD-NOTIFICATIONS
+    status: implemented
+    routes:
+      - /sales
+    primary_user_goal: Consultar e registrar vendas.
+    acceptance_criteria:
+      - A listagem é operável por teclado.
+      - A importação por CSV informa quantas linhas falharam e por quê.
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: conciliaai-frontend/src/pages/Sales
+  - id: UI-TRANSACTIONS
+    capability: CAP-DASHBOARD-NOTIFICATIONS
+    status: implemented
+    routes:
+      - /transactions
+    primary_user_goal: Consultar as transações recebidas das adquirentes.
+    acceptance_criteria:
+      - A transação exibe adquirente, NSU e valor líquido.
+      - O filtro por adquirente e período é preservado ao navegar.
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: conciliaai-frontend/src/pages/Transactions
+  - id: UI-REPORTS
+    capability: CAP-DASHBOARD-NOTIFICATIONS
+    status: implemented
+    routes:
+      - /reports
+    primary_user_goal: Exportar relatórios de conciliação.
+    acceptance_criteria:
+      - O formato de exportação é escolhido antes de gerar.
+      - A exportação em andamento é distinguível de uma que falhou.
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: conciliaai-frontend/src/pages/Reports
+  - id: UI-NOTIFICATIONS
+    capability: CAP-DASHBOARD-NOTIFICATIONS
+    status: implemented
+    routes:
+      - /notifications
+    primary_user_goal: Ver o que o sistema notificou e o que ainda não foi lido.
+    acceptance_criteria:
+      - Não lidas são distinguíveis das lidas sem depender só de cor.
+      - Marcar como lida não apaga o histórico.
+    satisfies:
+      - REQ-017
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: conciliaai-frontend/src/pages/Notifications
