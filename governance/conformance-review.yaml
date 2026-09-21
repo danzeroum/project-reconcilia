@@ -1,0 +1,147 @@
+# Registro TIPADO da validação semântica. Irmão de privacy-review.yaml, e pela mesma razão:
+# o fiscal determinístico não julga se uma descrição ainda condiz com o código — ele confere que
+# alguém julgou e que o julgamento cobre ESTE estado (scope_fingerprint, que inclui o SHA do alvo).
+#
+# Atualizar o fingerprint: python ci/audit_conformance.py --print-fingerprint
+# Schema: harness/schemas/conformance-review.schema.json
+schema_version: "1.0"
+metadata_version: "1.0"
+source_of_truth: true
+generated_from: null
+
+review:
+  produced_by: agent
+  agent: conformance
+  scope_fingerprint: "sha256:768375c840e6bf7084dabba04a0caa9c8f5fe6625716f4a41d002fb894d175d0"
+
+  findings:
+    - id: CONF-001
+      severity: low
+      summary: >
+        O negócio de exemplo do molde (CAP-PRICING, CAP-CATALOG e seus componentes) foi removido
+        por completo na adoção. Este repositório não descreve mais domínio de brinquedo algum.
+      # 'accepted' é o mais próximo que o enum oferece de "não é mais um achado": o registro fica
+      # como rastro de que a pendência que o molde carregava foi tratada aqui, e não esquecida.
+      disposition: accepted
+      rationale: >
+        O CP-000 removeu src/project/, tests/unit/ e os metadados do exemplo, e supersedeu o
+        ADR-005 no mesmo movimento — as asserções daquele ADR apontavam justamente para os
+        arquivos removidos, e sobreviver a eles as tornaria assertion_unresolvable. O achado que
+        o molde registrava como aceito deixou de existir aqui, que era o desfecho previsto.
+
+    - id: CONF-005
+      severity: low
+      summary: >
+        A cartografia fechou: 229/229 arquivos do alvo com dono, contra 0/229 na adoção. Os 270
+        achados de código e teste órfão que o repositório carregava não existem mais.
+      disposition: accepted
+      rationale: >
+        Fechado pelas fases ING-01 a ING-05 do /ingerir. Registrado como aceito e não removido
+        porque o número importa comparado: era o achado dominante deste repositório e some por
+        trabalho declarado, não por afrouxamento de fiscal. O grafo de depends_on foi DERIVADO
+        dos imports reais do inventário, não escrito à mão — a primeira versão foi escrita à mão
+        e o fiscal reprovou sessenta arestas de acoplamento que existiam no alvo e que nenhuma
+        declaração registrava.
+
+    - id: CONF-007
+      severity: high
+      summary: >
+        Vinte e dois ativos do alvo têm código maduro cuja razão de existir não está registrada
+        em backlog nenhum, e estão sob isenção declarada em risk-register.yaml:risk_exemptions.
+      disposition: risk_entry
+      ref: RISK-ALIGN-001
+      rationale: >
+        É o achado mais substantivo da ingestão, e é sobre o ALVO, não sobre este repositório.
+        Em três grupos: (a) duas capacidades inteiras — controle de acesso e plataforma — não
+        têm épico algum em user-stories.yaml, existem no código e são descritas só em prosa;
+        (b) conciliação bancária por OFX, gestão de vendas e de transações são partes vivas do
+        sistema que nenhum dos cinco épicos menciona; (c) o serviço de relatório tem story, mas
+        num épico que virou outra capacidade, e o fiscal exige — com razão — que implements
+        aponte para requisito da MESMA capacidade.
+        A alternativa era apontar cada componente para o requisito mais parecido e ficar verde.
+        Seria a aresta falsa que ALIGN-R4 existe para questionar, e sobreviveria calada a todas
+        as validações futuras. A isenção declarada some quando alguém do produto escrever a
+        story que falta ou decidir que ela não precisa existir — não quando a ingestão terminar.
+
+    - id: CONF-008
+      severity: medium
+      summary: >
+        Os critérios de aceite das doze superfícies de UI não foram colhidos do alvo: ele
+        descreve as telas e não declara condições de aceite para nenhuma.
+      disposition: accepted
+      rationale: >
+        São a régua de experiência mínima que o agente reviewer usa, e foram escritos por mim a
+        partir do que cada tela faz — o único conteúdo desta ingestão que não tem origem
+        rastreável no alvo, e por isso está dito no cabeçalho do próprio arquivo em vez de ficar
+        implícito. Pertencem ao julgamento humano da fase ING-07 tanto quanto risk_level.
+        Também é por isso que 'satisfies' está ausente em seis das doze: ligar tela a requisito
+        exige saber qual story cada página atende, e o alvo não declara esse vínculo.
+
+    - id: CONF-002
+      severity: low
+      summary: >
+        A area 'availability' do enum de riscos segue sem nenhum risco que a use — e agora a
+        lacuna deixou de ser teórica: este derivado governa um alvo COM runtime.
+      disposition: accepted
+      rationale: >
+        O molde registrou a lacuna como pertencente "ao derivado que governar um alvo com
+        runtime". Este é esse derivado, e o risco de disponibilidade passa a ter sobre o que
+        falar. Continua aceito por ora pela mesma razão do CONF-005: escrever o risco antes de
+        ING-06-GOVERNANCA ter percorrido o alvo produziria cobertura de fachada. A diferença é
+        que a pendência agora tem prazo — a fase de governança da ingestão.
+
+    - id: CONF-003
+      severity: medium
+      summary: >
+        O adapter de TypeScript não resolve alias de workspace, re-export em cadeia nem import
+        dinâmico, então o check de dependência declarada é cego para parte do acoplamento real
+        de um monorepo TS.
+      disposition: accepted
+      rationale: >
+        Decisão registrada no ADR-009: adotar dependency-cruiser faria este molde, Python puro,
+        exigir toolchain de Node para fiscalizar qualquer alvo — inclusive alvos sem Node. A perda
+        é declarada no laudo do inventário em vez de ficar invisível, que é a diferença entre um
+        fiscal que não sabe e um que finge saber. Reverter a decisão exige ADR novo, não silêncio.
+
+    - id: CONF-004
+      severity: high
+      summary: >
+        O modelo de ameaças deste repositório cobre apenas a máquina de governar
+        (THREAT-HARNESS-ELEVATION). O alvo processa transação financeira e dado de portador de
+        cartão, e não tem uma única ameaça modelada.
+      disposition: risk_entry
+      ref: RISK-SEC-001
+      rationale: >
+        As duas ameaças que o molde carregava eram do negócio de exemplo e saíram com ele: seus
+        alvos (CMP-PRICING, CMP-CATALOG) e suas mitigações apontavam para arquivos que este
+        repositório não tem, e ameaça cujo alvo não existe é lista de preocupações, não
+        diligência. O que ficou no lugar é uma lacuna declarada em vez de uma cobertura fingida.
+        Fecha em ING-06-GOVERNANCA, que é a fase que passa lente de privacidade e risco sobre
+        cada elemento novo — e é bloqueante para promover o lifecycle deste repositório.
+
+    - id: CONF-006
+      severity: high
+      summary: >
+        As provas de mordida herdadas do molde não sobrevivem à derivação, e as 26 do
+        governance.yml sequer executam: ficam depois do passo de validação, que reprova, então
+        saem todas 'skipped'. tests/governance sai 47 failed / 94 passed — dez dos onze
+        arquivos — contra verde no molde.
+      disposition: risk_entry
+      ref: RISK-CONF-001
+      rationale: >
+        Herdado do molde e detectado durante a adoção. Dois passos foram removidos junto com o
+        que eles provavam (a asserção ADR-005-A2 e a ADR-008-A6, ambas inexistentes aqui) e um
+        foi corrigido para continuar provando o mesmo. Os demais indexam coleções agora vazias ou
+        escrevem em src/project/, e precisam ser reancorados em workspace/target — trabalho
+        declarado no CP-001, não improvisado nesta adoção. Reescrever à mão uma prova de mordida
+        sem poder executá-la é como se produz o pior resultado possível: um passo que passa pela
+        razão errada, indistinguível de um fiscal que morde.
+
+  # O que esta revisão NÃO olhou. "Sem achados" numa categoria que ninguém examinou é a forma
+  # mais silenciosa de laudo falso.
+  not_assessed:
+    - "Conformidade do código do alvo com o que o metadado diz dele (não há metadado do alvo ainda: nenhuma fase de ingestão rodou)"
+    - "Adequação das fronteiras de componente propostas pelo cartographer (sem ingestão executada)"
+    - "Eficácia real dos controles em produção (este repositório não tem ambiente de produção; o do alvo não é auditado daqui)"
+    - "Se os prazos de tratamento de risco são razoáveis (nenhum risco está open)"
+    - "Postura de segurança e de privacidade do próprio alvo (fora do escopo de /adotar; exige ING-06-GOVERNANCA e /revisao-lgpd)"

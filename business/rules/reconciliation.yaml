@@ -1,0 +1,61 @@
+# Regras de conciliação do ALVO, derivadas na fase ING-04-NEGOCIO.
+#
+# Não são leitura minha do código: o alvo declara estas cinco regras em
+# docs/business/business-rules.yaml, categoria "Matching", com os ids BR-001 a BR-005. O id
+# daqui é local (o schema exige o formato RULE-*), e o rationale carrega o id do alvo para que
+# /sincronizar consiga dizer que uma delas mudou lá.
+#
+# source_of_truth: false — documento derivado, como todo produto de ingestão.
+# Schema: harness/schemas/business-rules.schema.json
+schema_version: "1.0"
+metadata_version: "1.0"
+source_of_truth: false
+generated_from: "harness/pipeline/ingest.yaml:ING-04-NEGOCIO"
+
+capability: CAP-RECONCILIATION
+
+rules:
+  - id: RULE-MATCH-001
+    name: "Match exato por NSU, valor e data"
+    status: verified
+    statement: "Venda e transação da adquirente casam quando NSU, valor e data coincidem."
+    rationale: >
+      BR-001 em docs/business/business-rules.yaml, categoria Matching. É o caminho de maior
+      confiança do motor: casamento exato não passa por revisão humana.
+    verified_by:
+      - workspace/target/tests/unit/test_exact_matcher.py
+
+  - id: RULE-MATCH-002
+    name: "Tolerância de valor no match aproximado"
+    status: verified
+    statement: "O match aproximado admite diferença de até R$ 0,50 no valor."
+    rationale: "BR-002 em docs/business/business-rules.yaml, categoria Matching."
+    verified_by:
+      - workspace/target/tests/unit/test_fuzzy_matcher.py
+
+  - id: RULE-MATCH-003
+    name: "Tolerância de data no match aproximado"
+    status: verified
+    statement: "O match aproximado admite diferença de até 1 dia na data."
+    rationale: "BR-003 em docs/business/business-rules.yaml, categoria Matching."
+    verified_by:
+      - workspace/target/tests/unit/test_fuzzy_matcher.py
+
+  - id: RULE-MATCH-004
+    name: "Match de transação parcelada"
+    status: implemented
+    statement: >
+      Venda parcelada casa com o conjunto de parcelas da adquirente que a compõe, e não com uma
+      parcela isolada.
+    rationale: >
+      BR-004 em docs/business/business-rules.yaml. Declarada implemented e não verified: o alvo
+      tem a estratégia em src/application/strategies/installment_matcher.py e nenhum teste sob
+      tests/ a exercita — medido, não presumido.
+
+  - id: RULE-MATCH-005
+    name: "Venda paga com múltiplos cartões"
+    status: implemented
+    statement: "Uma venda pode casar com mais de uma transação quando foi paga em vários cartões."
+    rationale: >
+      BR-005 em docs/business/business-rules.yaml. Mesma razão do RULE-MATCH-004 para não estar
+      verified: sem teste que a prove no alvo neste SHA.

@@ -1,0 +1,38 @@
+# Visão de produto: o problema, os usuários e as métricas de sucesso (IDs estáveis MET-*).
+# Os requisitos do backlog citam quais métricas movem — o fiscal cobra que a métrica exista.
+# Schema: harness/schemas/vision.schema.json
+#
+# ESTE ARQUIVO É A EXCEÇÃO DO CP-000, e a razão está declarada lá. Não é output de fase alguma
+# da ingestão — é STAGE-VISION, de dono humano — e o schema exige ao menos uma métrica. As três
+# métricas de e-commerce do molde (MET-ACTIVATION, MET-AOV, MET-DISCOVERY) descreviam o negócio
+# de exemplo e saíram. O que entrou não foi inventado para o schema passar: é leitura do que o
+# PRÓPRIO alvo declara na sua documentação, e está sujeito a confirmação de quem é dono do
+# produto. /ingerir refina; quem promove o lifecycle assume o que está escrito aqui.
+schema_version: "1.0"
+metadata_version: "1.0"
+source_of_truth: true
+generated_from: null
+
+product:
+  problem: >
+    O lojista vende por várias adquirentes e recebe delas arquivos e relatórios em formatos
+    distintos. Conferir venda a venda contra o que cada adquirente diz ter capturado, liquidado
+    e descontado é trabalho manual, e é onde divergência de MDR, NSU ausente, chargeback e
+    atraso de liquidação passam despercebidos — cada um deles com valor que não volta sozinho.
+  target_users:
+    - "lojista de varejo e e-commerce que opera com múltiplas adquirentes"
+    - "equipe financeira responsável por conferir liquidação e contestar divergência"
+  value_proposition: >
+    Conciliar automaticamente venda e transação da adquirente, expondo como divergência
+    tipificada — e não como diferença de saldo — o que não casou, para que a diferença vire
+    trabalho rastreável em vez de perda silenciosa.
+  success_metrics:
+    # Métrica única e deliberada: é a que o alvo já mede e já quantifica em decisão automatizada,
+    # não uma meta arbitrada aqui. O limiar vive no alvo (tabela de decisão exposta na API de
+    # regras de reconciliação) e é externalizável por tenant — este metadado cita a régua, não a
+    # recopia, pela mesma razão que target.lock guarda o SHA sozinho.
+    - id: MET-AUTO-APPROVAL
+      description: >
+        Percentual de correspondências aprovadas automaticamente, sem revisão humana — a taxa de
+        auto-approval que o próprio alvo publica na sua métrica de processo.
+      target: "crescente sem elevar o retrabalho de divergência reaberta"

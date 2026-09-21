@@ -1,0 +1,66 @@
+# Contratos entre componentes do ALVO, derivados na fase ING-03-CARTOGRAFIA.
+#
+# Deliberadamente POUCOS e todos reais: cada 'exposes' abaixo é um símbolo que o inventário
+# de código leu do arquivo do alvo, não um nome que eu escolhi. Interface inventada é aresta
+# que o grafo passa a afirmar e ninguém consegue reconferir — pior que aresta ausente.
+# Schema: harness/schemas/interfaces.schema.json
+schema_version: "1.0"
+metadata_version: "1.0"
+source_of_truth: false
+generated_from: "harness/pipeline/ingest.yaml:ING-03-CARTOGRAFIA"
+
+interfaces:
+  - id: IFC-MATCHING-STRATEGY
+    name: Porta de estratégia de conciliação
+    kind: python-api
+    provider: CMP-MATCHING-ENGINE
+    consumers:
+      - CMP-RECONCILIATION-USECASES
+    exposes:
+      - src.application.interfaces.matching_strategy.MatchingStrategy
+    status: implemented
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: src/application/interfaces/matching_strategy.py
+  - id: IFC-ACQUIRER-REGISTRY
+    name: Registro plugável de adquirentes
+    kind: python-api
+    provider: CMP-ACQUIRER-ADAPTERS
+    consumers:
+      - CMP-INGESTION
+    exposes:
+      - src.infrastructure.acquirers.registry.get_parser_class
+      - src.infrastructure.acquirers.registry.list_acquirers
+    status: implemented
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: src/infrastructure/acquirers/registry.py
+  - id: IFC-RECONCILIATION-POLICY
+    name: Tabela de decisão da política de conciliação
+    kind: python-api
+    provider: CMP-DECISION-TABLE
+    consumers:
+      - CMP-RECONCILIATION-USECASES
+    exposes:
+      - src.application.services.decision_table.ReconciliationPolicy
+      - src.application.services.decision_table.load_policy
+    status: implemented
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: src/application/services/decision_table.py
+  - id: IFC-TRANSACTION-REPOSITORY
+    name: Porta de repositório de transações de adquirente
+    kind: python-api
+    provider: CMP-DOMAIN-PORTS
+    consumers:
+      - CMP-PERSISTENCE
+    exposes:
+      - src.domain.repositories.acquirer_transaction_repository.IAcquirerTransactionRepository
+    status: implemented
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: src/domain/repositories/acquirer_transaction_repository.py

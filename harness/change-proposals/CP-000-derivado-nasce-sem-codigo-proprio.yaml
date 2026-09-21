@@ -1,0 +1,109 @@
+# Mudança proposta: o derivado nasce sem código próprio.
+# Declarada ANTES de executada (ADR-004). Schema: ../schemas/change-proposal.schema.json
+#
+# Esta é a proposta fundadora DESTE repositório — a primeira da sua numeração, e a única que
+# apaga em vez de acrescentar. As propostas do molde (CP-002..CP-020) não vieram junto: elas
+# registram decisões tomadas LÁ, sobre um caminho que aquele repositório percorreu e este não.
+schema_version: "1.0"
+metadata_version: "1.0"
+source_of_truth: true
+generated_from: null
+
+proposal:
+  id: CP-000
+  title: "O derivado nasce sem código próprio: sai o negócio de exemplo do molde, entra a âncora do alvo"
+  author_kind: agent
+  created_at: "2026-08-05T00:00:00Z"
+
+  # Vazios de propósito, e não por omissão. Uma proposta que AFETA um ID precisa que ele exista
+  # depois — o fiscal recusa referência morta. Esta proposta REMOVE os IDs do exemplo; citá-los
+  # aqui produziria exatamente a referência pendente que a trava existe para impedir.
+  capabilities_affected: []
+  components_affected: []
+
+  risk_assessment:
+    level: high
+    risks:
+      - RISK-DERIV-001
+      - RISK-DERIV-002
+      - RISK-CONF-001
+      - RISK-META-001
+    rationale: >
+      O molde carrega um negócio de exemplo (src/project/, tests/unit/ e os metadados
+      CAP-PRICING, CAP-CATALOG, CMP-*, IFC-*, RULE-*, UI-*, REQ-*, MET-*) cuja única função lá é
+      dar substrato real para as asserções do ADR-005 morderem: sem código, uma trava de import
+      não tem o que vigiar. Aqui esse substrato é ruído — metadado que descreve um negócio que
+      este repositório não governa, ao lado do metadado que descreverá o negócio que ele governa.
+      Deixá-lo seria fundar o derivado sobre a doença que esta harness existe para combater:
+      metadado que não corresponde a sistema algum, verde porque ninguém pergunta a que ele se
+      refere.
+
+      TOCA CAMINHO PROTEGIDO, logo é high por definição da matriz: harness/stages.yaml muda, e
+      architecture/adr/index.yaml perde uma asserção. Risco high exige aval humano por trava de
+      schema, e é o que se quer aqui — um agente não deveria conseguir remover uma asserção
+      crítica de conformidade sozinho, ainda que a remoção seja a correta.
+
+      É UM MOVIMENTO SÓ, e a indivisibilidade é o ponto. Separar as quatro partes deixaria o
+      repositório vermelho no meio: apagar src/project/ sem rebaixar o ADR-005 transforma cinco
+      asserções em assertion_unresolvable; rebaixar o ADR-005 sem apagar o código deixa uma
+      decisão superseded vigiando código vivo; ajustar stages.yaml sem apagar nada quebra a
+      partição do repositório. Estado intermediário vermelho é estado que alguém normaliza.
+
+      AS QUATRO PARTES:
+
+        1. REMOVER o negócio de exemplo — src/project/, tests/unit/ e seus metadados. As quatro
+           coleções que ficam vazias (capabilities, components, interfaces, backlog.items) são
+           exatamente as que o CP-017 do molde previu: o piso saiu do schema e virou fiscal
+           ciente de estado, suspenso enquanto o derivado está em lifecycle incubating e cobrado
+           de volta assim que ele for promovido. business/rules/*.yaml não é esvaziado, é
+           APAGADO: regra vive em arquivo por capacidade, e um arquivo de regras que declara uma
+           capacidade inexistente é pior que a ausência dele.
+
+           business/vision.yaml é a exceção deliberada. Não é output de fase alguma da ingestão
+           (é STAGE-VISION, humana) e seu schema exige ao menos uma métrica. Em vez de inventar
+           uma — placeholder é a doença — as três métricas de e-commerce do exemplo saem e
+           entram problema, usuários e métrica lidos do que o PRÓPRIO alvo declara na sua
+           documentação. É conteúdo sobre o sistema real, sujeito a confirmação humana, não
+           enfeite para o schema passar.
+
+        2. REBAIXAR o ADR-005 a superseded, sem asserções. Suas cinco asserções apontam para
+           src/project/pricing.py e src/project/ports.py. O fiscal avalia asserção
+           independentemente do status do ADR — medido em check_adr_conformance —, então
+           rebaixar sem removê-las produziria cinco assertion_unresolvable. Uma trava que não
+           encontra o que vigiar está quebrada, não satisfeita. O schema colabora: 'accepted'
+           exige asserção, 'superseded' não.
+
+        3. AJUSTAR harness/stages.yaml. STAGE-CODE deixa de listar 'src' e passa a apontar só
+           para 'workspace', onde o alvo materializa no SHA do lock; STAGE-TESTS deixa de listar
+           tests/unit e tests/integration e tests/e2e — que eram do exemplo — e fica com
+           tests/governance, que são os testes de mordida dos fiscais DESTE repositório, mais
+           'workspace' pelos testes do alvo. Sem isso a partição não fecha: todo arquivo
+           pertence a exatamente uma etapa, e etapa que aponta para diretório inexistente é
+           promessa, não invariante.
+
+        4. REMOVER a asserção ADR-008-A6. Ela crava kind:"mold" em project.yaml e fala apenas do
+           repositório de ORIGEM — existe para impedir que alguém adote DENTRO do molde em vez
+           de derivar dele. Herdada aqui, ela reprova, e reprova corretamente: aqui o kind é
+           derived. O derivado não é o molde e não carrega as travas que falam só dele. As
+           outras cinco asserções do ADR-008 ficam todas, inclusive A4 (SHA fora de target.lock)
+           e A5 (nenhum alvo é especial em ci/ ou harness/), que é justamente a que mais importa
+           num repositório que agora tem um alvo.
+
+      O QUE NÃO MUDA, e é o que torna a remoção segura: nenhum fiscal é afrouxado. ci/ e
+      harness/schemas/ saem intactos. A única trava que deixa de existir é a que fala do papel
+      que este repositório não tem.
+
+  required_gates:
+    - metadata-validation
+    - inventory
+    - unit-tests
+
+  # Os testes de mordida do molde vêm inteiros e continuam valendo — inclusive os de derivação,
+  # que agora rodam num repositório que de fato é derivado.
+  tests_required:
+    - tests/governance/test_derivacao_bites.py
+    - tests/governance/test_conformance_bites.py
+    - tests/governance/test_inventario_bites.py
+
+  human_approval_required: true
+  change_mode: pull_request

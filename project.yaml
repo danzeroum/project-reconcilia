@@ -1,0 +1,78 @@
+# Manifesto de identidade do projeto. Completa (não substitui) o pyproject.toml com o que
+# Python não expressa: propósito, domínio, criticidade, donos, governança.
+# Schema: harness/schemas/project.schema.json
+schema_version: "1.0"
+metadata_version: "1.1"   # 1.1: classification deixou de ser texto livre opcional e virou enum obrigatório
+source_of_truth: true
+generated_from: null
+
+project:
+  id: "danzeroum-project-reconcilia"
+  name: "Project Reconcilia"
+  # mold = a casca genérica; derived = o gêmeo de governança de um alvo. O schema exige o bloco
+  # target quando derived e o PROÍBE quando mold: um molde ancorado num alvo específico deixou de
+  # ser genérico, e a genericidade é justamente o produto do molde.
+  kind: "derived"
+  type: "governance-twin"
+  lifecycle: "incubating"
+  status: "active"
+
+# O ÚNICO lugar deste repositório onde o alvo aparece. Nada específico dele pode vazar para ci/
+# ou harness/ — ADR-008-A5 reprova. O SHA não mora aqui: mora em target.lock, e só lá.
+target:
+  repo: "danzeroum/reconcilia"
+  # Descoberta no remoto, não presumida: o alvo usa master, não main.
+  ref: "master"
+  lock_source: target.lock
+  # Raízes de código de produto. É o universo sobre o qual a invariante do código órfão se aplica.
+  # scripts/ e alembic/ ficam de fora nesta adoção: são utilitários e migrações, e incluí-los
+  # ampliaria o universo antes de a ingestão ter coberto sequer o código de produto. Ampliar
+  # depois é declarativo — uma linha aqui — e a próxima /sincronizar reconhece a diferença.
+  code_roots:
+    - "src"
+    - "conciliaai-frontend/src"
+  test_roots:
+    - "tests"
+    - "conciliaai-frontend/tests"
+  # Presentes de fato no alvo, por contagem de arquivos rastreados: 204 .py, 78 .ts/.tsx.
+  languages:
+    - "python"
+    - "typescript"
+
+business:
+  domain: "generic"
+  purpose: >
+    Gêmeo de governança do alvo declarado em target: hospeda o metadado, as decisões e os
+    fiscais que descrevem e vigiam aquele sistema, consumindo a WebQA Suite como padrão externo.
+    O código do alvo nunca é copiado para cá — materializa em workspace/target/ no SHA do lock.
+  criticality: "medium"
+  # Handle de conta, não nome civil nem e-mail pessoal: um handle já satisfaz a finalidade
+  # (saber a quem escalar), e coletar menos é a primeira linha da hierarquia de controle.
+  # Risco com dono "unassigned" é risco sem dono real — ci/audit_governance.py cobra.
+  stakeholders:
+    product_owner: "@danzeroum"
+    technical_owner: "@danzeroum"
+    security_owner: "@danzeroum"
+
+# Declara QUAL padrão e ONDE a versão mora — nunca o número (fonte única fecha o risco H3).
+quality_standard:
+  name: webqa-suite
+  version_source: requirements-qa.txt
+
+governance:
+  default_change_mode: "pull_request"
+  human_approval_required_for:
+    - dependency_update
+    - production_deploy
+    - load
+    - active_discovery
+    - protected_path_change
+  evidence_retention_days: 90
+
+# Enums fechados: "to-be-assessed" era texto livre num bloco opcional — pendência que nenhum
+# fiscal conseguia reprovar. lgpd_relevance é cruzado com governance/data-inventory.yaml
+# (controller.role) por ci/audit_lgpd.py: declarar aqui e tratar dado lá é divergência.
+classification:
+  data_classification: "internal"
+  lgpd_relevance: "none"
+  internet_exposed: false

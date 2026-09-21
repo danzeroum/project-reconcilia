@@ -1,0 +1,71 @@
+# Regras de detecção de anomalia e tratamento de chargeback do ALVO, derivadas na fase
+# ING-04-NEGOCIO.
+#
+# Declaradas pelo alvo em docs/business/business-rules.yaml, categorias "Anomaly Detection"
+# (BR-020 a BR-024) e "Chargeback Handling" (BR-030, BR-031). As duas categorias vivem no mesmo
+# arquivo porque o schema exige um arquivo POR CAPACIDADE, e as sete regem a mesma:
+# CAP-ANOMALY-DETECTION.
+#
+# source_of_truth: false — documento derivado.
+# Schema: harness/schemas/business-rules.schema.json
+schema_version: "1.0"
+metadata_version: "1.0"
+source_of_truth: false
+generated_from: "harness/pipeline/ingest.yaml:ING-04-NEGOCIO"
+
+capability: CAP-ANOMALY-DETECTION
+
+rules:
+  - id: RULE-ANOMALY-001
+    name: "Divergência de MDR"
+    status: verified
+    statement: >
+      Taxa efetivamente cobrada pela adquirente que diverge da esperada para aquela modalidade é
+      anomalia, não arredondamento.
+    rationale: >
+      BR-020 em docs/business/business-rules.yaml. O esperado vem das regras RULE-MDR-*; é o
+      cruzamento entre os dois arquivos que dá sentido a esta.
+    verified_by:
+      - workspace/target/tests/unit/test_anomaly_detection_service.py
+
+  - id: RULE-ANOMALY-002
+    name: "Venda sem transação correspondente"
+    status: implemented
+    statement: "Venda que não recebeu transação da adquirente após o prazo esperado é anomalia."
+    rationale: "BR-021 em docs/business/business-rules.yaml."
+
+  - id: RULE-ANOMALY-003
+    name: "Chargeback não autorizado"
+    status: implemented
+    statement: "Chargeback sem contestação autorizada correspondente é anomalia."
+    rationale: "BR-022 em docs/business/business-rules.yaml."
+
+  - id: RULE-ANOMALY-004
+    name: "Atraso de liquidação"
+    status: implemented
+    statement: "Pagamento liquidado depois do prazo D+N acordado é anomalia."
+    rationale: "BR-023 em docs/business/business-rules.yaml."
+
+  - id: RULE-ANOMALY-005
+    name: "Transação duplicada"
+    status: implemented
+    statement: "A mesma transação processada mais de uma vez é anomalia."
+    rationale: "BR-024 em docs/business/business-rules.yaml."
+
+  - id: RULE-CHARGEBACK-001
+    name: "Classificação de chargeback"
+    status: implemented
+    statement: "Todo chargeback é classificado por motivo antes de qualquer decisão de contestar."
+    rationale: "BR-030 em docs/business/business-rules.yaml."
+
+  - id: RULE-CHARGEBACK-002
+    name: "Custo-benefício da contestação"
+    status: implemented
+    statement: >
+      A recomendação de contestar compara o ganho esperado — valor da transação vezes a
+      probabilidade de vitória — com o custo de contestar, que inclui tarifa fixa e horas de
+      trabalho jurídico.
+    rationale: >
+      BR-031 em docs/business/business-rules.yaml, que traz a fórmula com os valores de tarifa e
+      hora. É regra de decisão automatizada sobre dinheiro do lojista: o julgamento de risco dela
+      pertence à fase ING-07, não a quem ingere.

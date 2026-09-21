@@ -1,0 +1,368 @@
+# Backlog do ALVO, derivado na fase ING-04-NEGOCIO.
+#
+# Um item por user story documentada em docs/business/user-stories.yaml — vinte, dos cinco
+# épicos. O id local é sequencial porque o schema exige REQ-NNN; derived_from.section carrega
+# o par épico/story do alvo, que é o que permite /sincronizar dizer qual item envelheceu.
+#
+# STATUS: 'in_progress' onde algum componente reivindica o requisito em implements,
+# 'proposed' onde nenhum reivindica. Nenhum 'done': o documento de origem se declara
+# status "draft" e não registra conclusão por story — afirmá-la seria inventar um fato
+# que o alvo não declara. A primeira versão marcava tudo 'proposed' e o fiscal reprovou,
+# com razão: componente 'implemented' não implementa requisito ainda não iniciado.
+# Schema: harness/schemas/backlog.schema.json
+schema_version: "1.0"
+metadata_version: "1.0"
+source_of_truth: false
+generated_from: "harness/pipeline/ingest.yaml:ING-04-NEGOCIO"
+
+items:
+  - id: REQ-001
+    title: Como sistema, quero coletar EDI Cielo diariamente via SFTP
+    type: user-story
+    capability: CAP-ACQUIRER-INTEGRATION
+    status: in_progress
+    priority: high
+    governed_by:
+      - RULE-MDR-001
+      - RULE-MDR-002
+      - RULE-MDR-003
+    acceptance_criteria:
+      - Sistema conecta SFTP Cielo com credenciais seguras (AWS Secrets)
+      - Download automático todo dia às 6h
+      - Parser processa 100% das linhas válidas
+      - Linhas inválidas vão para dead letter queue
+      - Tempo de parsing < 1min para 10k transações
+      - Logs estruturados sem dados sensíveis
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: docs/business/user-stories.yaml
+      section: EPIC-1 / US-001
+  - id: REQ-002
+    title: Como sistema, quero integrar arquivos EDI da Rede
+    type: user-story
+    capability: CAP-ACQUIRER-INTEGRATION
+    status: in_progress
+    priority: high
+    acceptance_criteria:
+      - Download SFTP Rede com retry exponencial
+      - Suporte aos layouts EEVC, EEVD, EEFI e EESA
+      - Parser converte para schema canônico
+      - Alertar Ops se arquivo não disponível por >24h
+      - Logs estruturados com métricas de ingestão
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: docs/business/user-stories.yaml
+      section: EPIC-1 / US-002
+  - id: REQ-003
+    title: Como sistema, quero integrar Stone API em tempo real
+    type: user-story
+    capability: CAP-ACQUIRER-INTEGRATION
+    status: in_progress
+    priority: medium
+    acceptance_criteria:
+      - Consulta API REST Stone a cada 1h
+      - Parse JSON para schema canônico
+      - Rate limiting respeitado
+      - Webhook opcional suportado
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: docs/business/user-stories.yaml
+      section: EPIC-1 / US-003
+  - id: REQ-004
+    title: Como desenvolvedor, quero schema canônico de transações
+    type: user-story
+    capability: CAP-ACQUIRER-INTEGRATION
+    status: proposed
+    priority: high
+    acceptance_criteria:
+      - JSON Schema documentado
+      - Conversores Cielo → Canônico
+      - Conversores Rede → Canônico
+      - Conversores Stone → Canônico
+      - Validação automática via JSON Schema
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: docs/business/user-stories.yaml
+      section: EPIC-1 / US-004
+  - id: REQ-005
+    title: Como Ops, quero monitorar health dos conectores
+    type: user-story
+    capability: CAP-ACQUIRER-INTEGRATION
+    status: in_progress
+    priority: medium
+    acceptance_criteria:
+      - Dashboard com status em tempo real
+      - "Métricas: success_rate, latency, error_count"
+      - Alertas Slack se error_rate > 10%
+      - Endpoint /health/connectors
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: docs/business/user-stories.yaml
+      section: EPIC-1 / US-005
+  - id: REQ-006
+    title: Como sistema, quero dead letter queue para erros de parsing
+    type: user-story
+    capability: CAP-ACQUIRER-INTEGRATION
+    status: in_progress
+    priority: medium
+    acceptance_criteria:
+      - Linhas inválidas vão para SQS DLQ
+      - Dashboard para itens em DLQ
+      - Reprocessamento manual disponível
+      - Retenção de 30 dias
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: docs/business/user-stories.yaml
+      section: EPIC-1 / US-006
+  - id: REQ-007
+    title: Como lojista, quero reconciliação automática diária
+    type: user-story
+    capability: CAP-RECONCILIATION
+    status: in_progress
+    priority: high
+    governed_by:
+      - RULE-MATCH-001
+      - RULE-MATCH-002
+      - RULE-MATCH-003
+      - RULE-MATCH-004
+      - RULE-MATCH-005
+    acceptance_criteria:
+      - Taxa de matching >= 99.5%
+      - Processamento de 10k transações em < 5min
+      - Dashboard com resultado em tempo real
+      - Email sumário às 8h
+      - Exportação Excel com 1 clique
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: docs/business/user-stories.yaml
+      section: EPIC-2 / US-010
+  - id: REQ-008
+    title: Como lojista, quero ver divergências em ordem de impacto
+    type: user-story
+    capability: CAP-RECONCILIATION
+    status: in_progress
+    priority: high
+    acceptance_criteria:
+      - Ordenação por severity × valor
+      - Filtros por severidade, adquirente, período
+      - Indicadores visuais de severity
+      - Detalhes com venda vs transação
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: docs/business/user-stories.yaml
+      section: EPIC-2 / US-011
+  - id: REQ-009
+    title: Como lojista, quero exportar relatório de reconciliação
+    type: user-story
+    capability: CAP-RECONCILIATION
+    status: proposed
+    priority: medium
+    acceptance_criteria:
+      - Exportação Excel com múltiplas abas
+      - "Abas: Matched, Divergences, Summary"
+      - Filtros aplicados refletidos no export
+      - Formatação profissional
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: docs/business/user-stories.yaml
+      section: EPIC-2 / US-012
+  - id: REQ-010
+    title: Como sistema, quero matching baseado em ML para casos complexos
+    type: user-story
+    capability: CAP-RECONCILIATION
+    status: proposed
+    priority: low
+    acceptance_criteria:
+      - Confidence threshold >= 0.90
+      - Precision >= 95%
+      - Recall >= 90%
+      - Explainability das features
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: docs/business/user-stories.yaml
+      section: EPIC-2 / US-013
+  - id: REQ-011
+    title: Como lojista, quero ser alertado sobre taxas MDR incorretas
+    type: user-story
+    capability: CAP-ANOMALY-DETECTION
+    status: in_progress
+    priority: high
+    governed_by:
+      - RULE-ANOMALY-001
+    acceptance_criteria:
+      - Detecção de variação > 10% em tempo real
+      - Alerta via email e push
+      - Cálculo do valor a recuperar
+      - Sugestão de contestação
+      - Histórico de ocorrências
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: docs/business/user-stories.yaml
+      section: EPIC-3 / US-020
+  - id: REQ-012
+    title: Como lojista, quero detectar vendas sem transação (missing)
+    type: user-story
+    capability: CAP-ANOMALY-DETECTION
+    status: in_progress
+    priority: high
+    governed_by:
+      - RULE-ANOMALY-002
+    acceptance_criteria:
+      - Alerta D+7 severity MEDIUM
+      - Alerta D+30 severity HIGH
+      - Alerta D+90 severity CRITICAL
+      - "Sugestão de ação: verificar captura"
+      - Dashboard com aging
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: docs/business/user-stories.yaml
+      section: EPIC-3 / US-021
+  - id: REQ-013
+    title: Como lojista, quero detectar chargebacks não autorizados
+    type: user-story
+    capability: CAP-ANOMALY-DETECTION
+    status: in_progress
+    priority: medium
+    governed_by:
+      - RULE-ANOMALY-003
+      - RULE-CHARGEBACK-001
+    acceptance_criteria:
+      - Detecção D+0
+      - Alerta CRITICAL imediato
+      - Cálculo total_loss
+      - Draft de contestação
+      - Countdown de 30 dias
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: docs/business/user-stories.yaml
+      section: EPIC-3 / US-022
+  - id: REQ-014
+    title: Como lojista, quero detectar pagamentos atrasados
+    type: user-story
+    capability: CAP-ANOMALY-DETECTION
+    status: in_progress
+    priority: medium
+    governed_by:
+      - RULE-ANOMALY-004
+    acceptance_criteria:
+      - Detecção delay > 7 dias
+      - Severity progressiva
+      - Sugestão de follow-up
+      - Tracking de dias em atraso
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: docs/business/user-stories.yaml
+      section: EPIC-3 / US-023
+  - id: REQ-015
+    title: Como lojista, quero dashboard com visão geral
+    type: user-story
+    capability: CAP-DASHBOARD-NOTIFICATIONS
+    status: in_progress
+    priority: high
+    acceptance_criteria:
+      - "KPIs: Valor Recuperável, Divergências Críticas, Matching Rate"
+      - Gráfico evolução 30 dias
+      - Ações rápidas
+      - Layout responsivo
+      - Tempo de carregamento < 2s
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: docs/business/user-stories.yaml
+      section: EPIC-4 / US-030
+  - id: REQ-016
+    title: Como lojista, quero ação 'Contestar' em 1 clique
+    type: user-story
+    capability: CAP-DASHBOARD-NOTIFICATIONS
+    status: in_progress
+    priority: high
+    acceptance_criteria:
+      - Botão visível para severidades HIGH e CRITICAL
+      - Modal com preview
+      - Campos pré-preenchidos
+      - Opção enviar ou copiar texto
+      - Tracking de contestações
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: docs/business/user-stories.yaml
+      section: EPIC-4 / US-031
+  - id: REQ-017
+    title: Como lojista, quero alertas por email quando algo crítico acontece
+    type: user-story
+    capability: CAP-DASHBOARD-NOTIFICATIONS
+    status: in_progress
+    priority: high
+    acceptance_criteria:
+      - Email imediato para CRITICAL
+      - Digest diário para HIGH
+      - Resumo semanal para MEDIUM
+      - Linguagem simples
+      - Link direto para dashboard
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: docs/business/user-stories.yaml
+      section: EPIC-4 / US-032
+  - id: REQ-018
+    title: Como franqueador, quero visão consolidada multi-loja
+    type: user-story
+    capability: CAP-DASHBOARD-NOTIFICATIONS
+    status: proposed
+    priority: medium
+    acceptance_criteria:
+      - Filtro por loja
+      - Comparativo de perdas
+      - Totais consolidados
+      - Drill-down por loja
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: docs/business/user-stories.yaml
+      section: EPIC-4 / US-033
+  - id: REQ-019
+    title: Como lojista, quero prever meus recebimentos dos próximos 90 dias
+    type: user-story
+    capability: CAP-CASH-FLOW
+    status: in_progress
+    priority: medium
+    acceptance_criteria:
+      - Forecast 90 dias com MAE < 5%
+      - Gráfico com intervalo de confiança
+      - Breakdown por adquirente e tipo pagamento
+      - Considerar parcelas, antecipações, chargebacks
+      - Atualização diária automática
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: docs/business/user-stories.yaml
+      section: EPIC-5 / US-040
+  - id: REQ-020
+    title: Como lojista, quero simular cenários 'what-if'
+    type: user-story
+    capability: CAP-CASH-FLOW
+    status: proposed
+    priority: low
+    acceptance_criteria:
+      - "Cenários: antecipação, mudança taxa, volume"
+      - Comparação lado a lado
+      - Cálculo de impacto financeiro
+    derived_from:
+      repo: danzeroum/reconcilia
+      sha: 2a89a1b293a58548c7e90c4a1644e7a33ee973e8
+      path: docs/business/user-stories.yaml
+      section: EPIC-5 / US-041
