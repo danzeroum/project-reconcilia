@@ -48,6 +48,22 @@ proposal:
            validação: governance.yml (full-validation), validate-metadata.yml e qa.yml
            (inventory-and-passive, que precisa do workspace para os testes de mordida).
 
+      CORREÇÃO POSTERIOR, e vale registrar porque é o mesmo erro que a proposta descreve, cometido
+      por quem a escreveu: ERAM QUATRO WORKFLOWS, não três. conformance.yml ficou de fora, e a
+      omissão só apareceu cinco semanas depois — ele roda por agendamento semanal, então não
+      aparece no CI de um push e não foi visto na rodada seguinte à execução desta proposta.
+
+      O custo foi maior que um check vermelho. Naquele workflow a validação é o passo 5, e o
+      passo 7 é "Drift do alvo" — a única verificação do repositório inteiro que pergunta se o
+      alvo andou desde o SHA do lock. Com a validação reprovando por falta de materialização, o
+      passo de drift saiu 'skipped' em todas as cinco execuções. O workflow que existe
+      justamente "para pegar o que só o tempo revela" passou cinco semanas sem revelar nada, e
+      um alvo que tivesse andado nesse período não teria sido reportado por ninguém.
+
+      É a forma exata do achado registrado no CP-001 sobre os passos negativos, numa quarta
+      instância: um fiscal declarado, colocado atrás de um gate que não abre, é indistinguível de
+      um fiscal que não existe.
+
       O PASSO CONTINUA GENÉRICO, e isso é requisito, não detalhe. `python ci/bootstrap.py
       --skip-deps --no-validate` não nomeia alvo nenhum: lê project.yaml e target.lock, e num
       molde imprime "nada a materializar" e sai 0. O mesmo workflow serve aos dois papéis, que é

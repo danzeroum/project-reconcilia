@@ -24,6 +24,14 @@ jobs:
       - name: Instalar ferramentas de validação
         run: pip install "jsonschema>=4" "pyyaml>=6"
 
+      # Genérico de propósito (CP-002): lê project.yaml e target.lock, não nomeia alvo algum.
+      # Num molde imprime "nada a materializar" e sai 0. ESTE WORKFLOW FICOU DE FORA do CP-002
+      # original, e a omissão custou cinco execuções semanais: sem o alvo materializado, a
+      # validação reprovava no passo 5 e os passos 6 e 7 saíam 'skipped' — inclusive o de drift,
+      # que é a razão de este workflow existir.
+      - name: Materializar o alvo no SHA de target.lock
+        run: python ci/bootstrap.py --skip-deps --no-validate
+
       - name: Validação total do projeto
         run: python ci/validate_all.py
 
